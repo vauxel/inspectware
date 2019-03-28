@@ -1,0 +1,108 @@
+extends layout
+
+block content
+	nav.navbar.navbar-expand-lg.navbar-custom.fixed-top#mainNav
+		.container-fluid
+			a.navbar-brand.js-scroll-trigger(href="#page-top") #{name}
+			button.navbar-toggler(
+				type="button"
+				data-toggle="collapse"
+				data-target="#navbarResponsive"
+				aria-controls="navbar"
+				aria-expanded="false"
+				aria-label="Toggle navigation"
+			)
+				span.navbar-toggler-icon
+			.collapse.navbar-collapse#navbarResponsive
+				ul.navbar-nav.ml-auto
+					li.nav-item
+						a.nav-link.js-scroll-trigger(href="#features") Features
+					li.nav-item
+						a.nav-link.nav-btn(href="/dash") Launch Dashboard
+	header.splash
+		.splash-image
+		.container.text-center
+			h1 Home Inspection Software for the 21st Century
+			p.lead Upgrade your home inspection business with a feature-rich, efficient software service that best suits your needs.
+			a(href="#features" role="button") Learn More
+	section#headliner
+		.row.mx-0
+			.headliner-item.col-sm
+				h3 Seamless Scheduling
+				p From viewing availabilities to finalizing a scheduled appointment, #{name} provides clients and inspectors with a seamless and automated scheduling experience.
+				.icon
+					i.far.fa-calendar-alt
+			.headliner-item.col-sm
+				h3 Comprehensive Administration
+				p Our administrative control panel provides inspectors with a range of options to manage their inspections, clientele, and business altogether.
+				.icon
+					i.fas.fa-toolbox
+			.headliner-item.col-sm
+				h3 On-Site Reporting
+				p #{name} provides inspectors with fully-featured utilities to allow them to provide in-depth reports while still being on-site.
+				.icon
+					i.fas.fa-paste
+	section#features
+		.container
+			.row
+				.col-md-6.offset-md-3.features-header
+					h2 Our Features
+					p #{name} offers a comprehensive suite of features through our online software accessible from anywhere with an internet connection.
+			.row
+				.col-md-4.feature
+					.icon
+						i.fas.fa-calendar-plus
+					.description
+						h3 Hassle-Free Scheduling
+						p Freely allow your clients and realtors to schedule inspections all online without difficulty.
+				.col-md-4.feature
+					.icon
+						i.fas.fa-envelope-open-text
+					.description
+						h3 Automated Notifications
+						p Notify the pertinent parties with ease through automated notifications when an inspection's state is updated.
+				.col-md-4.feature
+					.icon
+						i.fas.fa-signature
+					.description
+						h3 Online Payment &amp; Signing
+						p Skip the clutter when invoicing and requesting signed agreements from your clientele by fully automating that process online.
+				.col-md-4.feature
+					.icon
+						i.fas.fa-file-alt
+					.description
+						h3 Inspection Administration
+						p Manage and view your inspections, past, present &amp; future, through our feature-rich, online administration dashboard.
+				.col-md-4.feature
+					.icon
+						i.fas.fa-user-friends
+					.description
+						h3 Client &amp; Realtor Web Portals
+						p Effortlessly give access to inspection reports and relevant documents to clients and realtors online.
+				.col-md-4.feature
+					.icon
+						i.fas.fa-tools
+					.description
+						h3 Inspector Toolkit
+						p Conduct inspections and formulate reports more efficiently and professionally through our inclusive toolkit.
+				.col-md-4.feature
+					.icon
+						i.far.fa-chart-bar
+					.description
+						h3 Rich Analytics
+						p Gain insight into the statistical metrics of your business through rich charts and graphs that allow you to analyze for the future.
+				.col-md-4.feature
+					.icon
+						i.fas.fa-cloud
+					.description
+						h3 Cloud Backups
+						p Give yourself peace of mind with having your inspection reports always available online in the cloud 24/7, backed up daily.
+				.col-md-4.feature
+					.icon
+						i.fas.fa-tools
+					.description
+						h3 3rd Party Services Integration
+						p Enrich your inspection workflow by integrating services such as Zillow &amp; Google Calendar for added efficiency.
+	footer.py-5.bg-dark
+		.container
+			p.m-0.text-center.text-white Copyright &copy; #{name} 2019
