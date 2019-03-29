@@ -1,13 +1,12 @@
-const Schema = require('mongoose').Schema;
-const shortid = require('shortid');
+import { Schema } from 'mongoose';
+import ShortId from "shortid";
 
-import InspectionSchema from "./client";
-import ClientSchema from "./client";
+import InspectionSchema from "./inspection";
 
-const RealtorSchema = new Schema({
+const ClientSchema: Schema = new Schema({
 	userId: {
 		type: String,
-		default: shortid.generate
+		default: ShortId.generate
 	},
 	email: {
 		type: String,
@@ -23,10 +22,7 @@ const RealtorSchema = new Schema({
 	},
 	inspections: {
 		type: [InspectionSchema]
-	},
-	clients: {
-		type: [ClientSchema]
 	}
 });
 
-export default RealtorSchema;
+export default ClientSchema;
