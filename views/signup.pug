@@ -1,0 +1,68 @@
+extends layout
+
+block content
+	header.signup-splash
+		.container.text-center
+			h1 Pricing &amp; Signup
+			p.lead Discover the plan that best suits you and try our software with a FREE TRIAL for 3 inspections.
+	section#pricing
+		.container
+			.row
+				.col-md-6.offset-md-3.pricing-header
+					i.fas.fa-dollar-sign
+					h2 Pricing Plans
+			.row.pricing-plans
+				.col-md-6.pricing-plan
+					.plan-duration Monthly
+					.plan-price $79
+					.plan-duration-sub / month
+				.col-md-6.pricing-plan
+					.plan-duration Yearly
+					.plan-price $799
+					.plan-duration-sub / year
+					.plan-discount Save $149/year with the yearly plan
+	section#signup
+		.container-fluid
+			.row.signup-header
+				.col-md-6.offset-md-3
+					i.fas.fa-calendar-check
+					h2 Sign Up For An Account
+			.row.signup-body
+				.col-md-6.offset-md-3
+					.container
+						.free-trial
+							h5 Sign up now with a free trial
+							ul
+								li Use the full version of the software
+								li Create 3 free inspection reports
+								li Risk free, no payment required
+						form
+							.alert.alert-warning#signupError
+								i.fas.fa-info-circle.fa-sm
+								span#signupErrorMessage
+							.form-group.row
+								.col
+									label(for="inputFirstName" id="labelFirstName") First Name
+									input.form-control(type="text" id="inputFirstName" placeholder="First Name")
+								.col
+									label(for="inputLastName" id="labelLastName") Last Name
+									input.form-control(type="text" id="inputLastName" placeholder="Last Name")
+							.form-group
+								label(for="inputCompanyName" id="labelCompanyName") Company Name
+								input.form-control(type="text" id="inputCompanyName" placeholder="Company Name")
+							.form-group
+								label(for="inputPhone" id="labelPhone") Phone Number
+								input.form-control(type="text" id="inputPhone" placeholder="###-###-####")
+							.form-group
+								label(for="inputEmail" id="labelEmail") Email Address
+								input.form-control(type="text" id="inputEmail" placeholder="Email Address")
+							.form-group.row
+								.col
+									label(for="inputPass1" id="labelPass1") Password
+									input.form-control(type="password" id="inputPass1" placeholder="Password")
+								.col
+									label(for="inputPass2" id="labelPass2") Repeat Password
+									input.form-control(type="password" id="inputPass2" placeholder="Repeat Password")
+							a.btn.btn-light.btn-lg.btn-block(href="#signup" onclick="submitSignupForm()")
+								| Sign Up
+								i.fas.fa-check-square

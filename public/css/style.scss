@@ -21,10 +21,16 @@ body {
 
 .navbar-custom {
 	color: $color-light-primary;
-	font-weight: 600;
+	
 	transition: background-color 0.25s;
 
+	.navbar-toggler {
+		color: $color-light-primary;
+		background-color: $color-dark-primary;
+	}
+
 	a {
+		font-weight: 600;
 		color: $color-light-primary;
 
 		&:hover {
@@ -32,16 +38,27 @@ body {
 		}
 	}
 
+	.free-trial-btn {
+		background-color: $color-3;
+		font-size: 0.8rem;
+	}
+
+	.launch-dash-btn {
+		margin-left: 15px;
+		background-color: $color-1;
+	}
+
 	.nav-btn {
 		display: inline-block;
 		background-color: $color-3;
 		border-radius: 10px;
-		padding: 10px 20px !important;
-		margin-left: 10px;
+		padding-left: 10px !important;
+		padding-right: 10px !important;
 		color: $color-light-primary;
 		text-transform: uppercase;
 		font-size: 0.8rem;
 		font-weight: 600;
+		border: 2px solid $color-1;
 		transition: background-color 0.25s;
 
 		&:hover {
@@ -82,7 +99,7 @@ body {
 	a {
 		display: inline-block;
 		background-color: $color-3;
-		border-radius: 20px;
+		border-radius: 15px;
 		padding: 10px 20px;
 		margin-top: 20px;
 		color: $color-light-primary;
@@ -95,6 +112,10 @@ body {
 			text-decoration: none;
 			background-color: $color-2;
 			color: $color-light-secondary;
+		}
+
+		+ a {
+			margin-left: 20px;
 		}
 	}
 }
@@ -149,7 +170,7 @@ body {
 
 		h3 {
 			font-weight: 600;
-			font-size: 24px;
+			font-size: 1.5rem;
 			margin-bottom: 20px;
 		}
 
@@ -194,7 +215,7 @@ body {
 			margin-left: 50px;
 
 			h3 {
-				font-size: 24px;
+				font-size: 1.5rem;
 				font-weight: 400;
 			}
 	
@@ -223,5 +244,198 @@ body {
 				transition: font-size 0.1s;
 			}
 		}
+	}
+}
+
+.signup-splash {
+	padding: 120px 0px 60px 0px;
+	color: $color-light-primary;
+	background-image: linear-gradient(160deg, $color-1 0%, $color-3 100%);
+}
+
+#pricing {
+	margin: 50px 0px 70px 0px;
+
+	.pricing-header {
+		padding: 10px;
+		margin-bottom: 40px;
+		text-align: center;
+
+		i {
+			display: inline-block;
+			color: $color-dark-tertiary;
+			font-size: 2rem;
+			padding: 10px;
+			margin: 10px;
+			border-right: 2px solid $color-dark-tertiary;
+		}
+
+		h2 {
+			display: inline-block;
+			color: $color-dark-secondary;
+			font-weight: 400;
+		}
+	}
+
+	.pricing-plans {
+		background-color: $color-light-tertiary;
+		border-radius: 30px;
+		padding: 30px;
+	}
+
+	.pricing-plan {
+		padding: 0px 30px;
+		text-align: center;
+
+		@media (min-width: 768px) {
+			+ .pricing-plan {
+				border-left: 2px solid $color-dark-tertiary;
+			}
+		}
+
+		.plan-duration {
+			text-transform: uppercase;
+			font-weight: 700;
+			color: $color-dark-secondary;
+			font-size: 1.25rem;
+		}
+
+		.plan-price {
+			display: inline-block;
+			color: $color-dark-tertiary;
+			font-size: 5rem;
+		}
+
+		.plan-duration-sub {
+			display: inline-block;
+			color: $color-dark-tertiary;
+			font-weight: 700;
+		}
+
+		.plan-discount {
+			color: $color-dark-secondary;
+			font-style: italic;
+			font-weight: 500;
+			font-size: 0.9rem;
+		}
+	}
+}
+
+#signup {
+	color: $color-light-primary;
+
+	.pricing-header {
+		padding: 10px;
+		margin-bottom: 40px;
+		text-align: center;
+
+		i {
+			display: inline-block;
+			color: $color-dark-tertiary;
+			font-size: 2rem;
+			padding: 10px;
+			margin: 10px;
+			border-right: 2px solid $color-dark-tertiary;
+		}
+	}
+
+	.signup-header {
+		padding: 20px 0px;
+		background-color: $color-2;
+		text-align: center;
+
+		i {
+			display: inline-block;
+			color: $color-light-tertiary;
+			font-size: 2rem;
+			padding: 10px;
+			margin: 10px;
+			border-right: 2px solid $color-light-tertiary;
+		}
+
+		h2 {
+			display: inline-block;
+			margin-bottom: 0px;
+		}
+	}
+
+	.signup-body {
+		padding: 30px 0px;
+		background-color: $color-3;
+	}
+
+	.free-trial {
+		margin-bottom: 30px;
+		padding: 10px;
+		text-align: center;
+
+		h5 {
+			display: inline-block;
+			padding-bottom: 5px;
+			text-transform: uppercase;
+			font-weight: 700;
+			font-size: 1rem;
+			border-bottom: 3px solid $color-2;
+		}
+
+		ul {
+			padding-left: 0px;
+			list-style: none;
+			margin-bottom: 0px;
+			font-style: italic;
+		}
+	}
+
+	form {
+		padding: 20px;
+		background-color: $color-2;
+		border-radius: 10px;
+
+		label {
+			text-transform: uppercase;
+			font-weight: 700;
+			font-size: 0.8rem;
+		}
+
+		input {
+			background-color: inherit;
+			color: $color-light-primary;
+			border: none;
+			border-bottom: 2px solid $color-light-primary;
+			border-radius: 0;
+			outline: none;
+
+			&:focus {
+				outline: 2px solid $color-light-primary;
+				border-bottom: none;
+			}
+
+			&::placeholder {
+				color: $color-light-secondary;
+			}
+		}
+
+		.input-error {
+			border-bottom: 2px solid #ff4444;
+		}
+
+		a {
+			text-transform: uppercase;
+			font-size: 1rem;
+			font-weight: 600;
+			color: $color-dark-secondary;
+
+			i {
+				margin-left: 5px;
+			}
+		}
+	}
+}
+
+#signupError {
+	display: none;
+
+	i {
+		margin-right: 5px;
 	}
 }

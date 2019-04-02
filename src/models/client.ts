@@ -2,7 +2,7 @@ import Mongoose from "mongoose";
 import ShortId from "shortid";
 
 const ClientSchema = new Mongoose.Schema({
-	userId: {
+	_id: {
 		type: String,
 		default: ShortId.generate
 	},
@@ -19,7 +19,8 @@ const ClientSchema = new Mongoose.Schema({
 		required: [true, "A name is required"]
 	},
 	inspections: {
-		type: { type: Number, ref: "Inspection" },
+		type: String,
+		ref: "Inspection"
 	}
 });
 

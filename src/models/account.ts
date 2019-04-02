@@ -2,7 +2,7 @@ import Mongoose from "mongoose";
 import ShortId from "shortid";
 
 const AccountSchema = new Mongoose.Schema({
-	accountId: {
+	_id: {
 		type: String,
 		default: ShortId.generate
 	},
@@ -10,21 +10,30 @@ const AccountSchema = new Mongoose.Schema({
 		type: Date,
 		default: Date.now
 	},
+	name: {
+		type: String,
+		required: [true, "A company name is required"]
+	},
 	owner: {
-		type: { type: Number, ref: "Inspector" },
+		type: String,
+		ref: "Inspector"
 	},
-    inspectors: {
-		type: [{ type: Number, ref: "Inspector" }],
-	},
-	clients: {
-		type: [{ type: Number, ref: "Client" }],
-	},
-	realtors: {
-		type: [{ type: Number, ref: "Realtor" }],
-	},
-	inspections: {
-		type: [{ type: Number, ref: "Inspection" }],
-	},
+    inspectors: [{
+		type: String,
+		ref: "Inspector"
+	}],
+	clients: [{
+		type: String,
+		ref: "Client"
+	}],
+	realtors: [{
+		type: String,
+		ref: "Realtor"
+	}],
+	inspections: [{
+		type: String,
+		ref: "Inspection"
+	}],
 	inspectionCounter: {
 		type: Number,
 		default: 0

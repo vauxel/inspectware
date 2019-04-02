@@ -2,7 +2,7 @@ import Mongoose from "mongoose";
 import ShortId from "shortid";
 
 const InspectorSchema = new Mongoose.Schema({
-	userId: {
+	_id: {
 		type: String,
 		default: ShortId.generate
 	},
@@ -14,12 +14,21 @@ const InspectorSchema = new Mongoose.Schema({
 		type: String,
 		required: [true, "A password is required"]
 	},
-	name: {
+	firstName: {
 		type: String,
-		required: [true, "A name is required"]
+		required: [true, "A first name is required"]
+	},
+	lastName: {
+		type: String,
+		required: [true, "A last name is required"]
+	},
+	phone: {
+		type: Number,
+		required: [true, "A phone number is required"]
 	},
 	account: {
-		type: { type: Number, ref: "Account" }
+		type: String,
+		ref: "Account"
 	}
 });
 

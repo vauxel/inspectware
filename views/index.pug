@@ -1,30 +1,13 @@
 extends layout
 
 block content
-	nav.navbar.navbar-expand-lg.navbar-custom.fixed-top#mainNav
-		.container-fluid
-			a.navbar-brand.js-scroll-trigger(href="#page-top") #{name}
-			button.navbar-toggler(
-				type="button"
-				data-toggle="collapse"
-				data-target="#navbarResponsive"
-				aria-controls="navbar"
-				aria-expanded="false"
-				aria-label="Toggle navigation"
-			)
-				span.navbar-toggler-icon
-			.collapse.navbar-collapse#navbarResponsive
-				ul.navbar-nav.ml-auto
-					li.nav-item
-						a.nav-link.js-scroll-trigger(href="#features") Features
-					li.nav-item
-						a.nav-link.nav-btn(href="/dash") Launch Dashboard
 	header.splash
 		.splash-image
 		.container.text-center
 			h1 Home Inspection Software for the 21st Century
 			p.lead Upgrade your home inspection business with a feature-rich, efficient software service that best suits your needs.
-			a(href="#features" role="button") Learn More
+			a(href="/#features" role="button") Learn More
+			a(href="/signup" role="button") Signup For A Free Trial
 	section#headliner
 		.row.mx-0
 			.headliner-item.col-sm

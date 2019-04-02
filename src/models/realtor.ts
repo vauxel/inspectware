@@ -2,7 +2,7 @@ import Mongoose from "mongoose";
 import ShortId from "shortid";
 
 const RealtorSchema = new Mongoose.Schema({
-	userId: {
+	_id: {
 		type: String,
 		default: ShortId.generate
 	},
@@ -18,12 +18,14 @@ const RealtorSchema = new Mongoose.Schema({
 		type: String,
 		required: [true, "A name is required"]
 	},
-	inspections: {
-		type: [{ type: Number, ref: "Inspection" }],
-	},
-	clients: {
-		type: [{ type: Number, ref: "Client" }],
-	}
+	inspections: [{
+		type: String,
+		ref: "Inspection"
+	}],
+	clients: [{
+		type: String,
+		ref: "Client"
+	}]
 });
 
 export default Mongoose.model("Realtor", RealtorSchema);

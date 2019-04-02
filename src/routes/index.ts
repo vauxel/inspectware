@@ -7,4 +7,8 @@ IndexRouter.get("/", (req: Request, res: Response) => {
 	});
 });
 
+IndexRouter.get("/signup", (req: Request, res: Response) => {
+	res.render("signup");
+});
+
 export default IndexRouter;
