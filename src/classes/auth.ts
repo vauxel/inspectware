@@ -60,6 +60,24 @@ export class Auth {
 	}
 
 	/**
+	 * Helper function to standardize the format of JWT payloads
+	 * @param affiliation the affiliation (inspector / client / realtor) of a user
+	 * @param id the id of a user
+	 * @param loginName the login name (email / username) of a user
+	 * @param name the full name of a user
+	 * @param accountId the account id of the user if they are an inspector
+	 */
+	public static createJWTPayload(affiliation: string, id: string, loginName: string, name: string, accountId?: string): object {
+		return {
+			affiliation,
+			id,
+			loginName,
+			name,
+			accountId: accountId ? accountId : undefined
+		};
+	}
+
+	/**
 	 * Hashes the given plaintext password
 	 * @param password the plaintext password
 	 * @returns the hashed password
@@ -80,12 +98,12 @@ export class Auth {
 
 	/**
 	 * Checks the sanitization of the given login information
-	 * @param loginname the login name (email / username)
+	 * @param loginName the login name (email / username)
 	 * @param password the plaintext password
 	 * @throws SanitizationException if any of the inputs is unsanitized
 	 */
-	public static checkLoginInfoSanitization(loginname: string, password: string): void {
-		if (!loginname) {
+	public static checkLoginInfoSanitization(loginName: string, password: string): void {
+		if (!loginName) {
 			throw new SanitizationException("Please enter a login name");
 		}
 
@@ -97,13 +115,13 @@ export class Auth {
 	/**
 	 * Attempts to login the user with the given credentials by giving them a generated authentication token
 	 * @param affiliation the affiliation (inspector / client / realtor)
-	 * @param loginname the login name (email / username)
+	 * @param loginName the login name (email / username)
 	 * @param password the plaintext password
 	 * @throws InvalidLoginException if the credentials are invalid
 	 */
-	public static async loginUser(affiliation: string, loginname: string, password: string) {
+	public static async loginUser(affiliation: string, loginName: string, password: string) {
 		try {
-			this.checkLoginInfoSanitization(loginname, password);
+			this.checkLoginInfoSanitization(loginName, password);
 		} catch (e) {
 			throw new InvalidLoginException(e.getMessage);
 		}
@@ -126,7 +144,7 @@ export class Auth {
 		let user;
 
 		try {
-			user = await model.findOne({ email: loginname });
+			user = await model.findOne({ email: loginName });
 		} catch (e) {
 			throw new RuntimeException("Database error: " + e.message);
 		}
@@ -137,27 +155,32 @@ export class Auth {
 
 		let validPassword = this.validatePassword(password, user.get("password"));
 
-		if (user.get("email") != loginname || !validPassword) {
+		if (user.get("email") != loginName || !validPassword) {
 			throw new InvalidLoginException("Invalid login credentials");
 		}
 
-		const token = this.generateJWT({ userId: user.id });
+		const token = this.generateJWT(this.createJWTPayload(
+			affiliation,
+			user.id,
+			user.get("email"),
+			user.get("firstName") + " " + user.get("lastName"),
+			affiliation == "inspector" ? user.get("account") : undefined
+		));
 
 		return {
 			userId: user.id,
-			name: user.get("name"),
 			token
 		};
 	}
 
 	/**
 	 * Checks the sanitization of the given account registration information
-	 * @param firstName 
-	 * @param lastName 
-	 * @param companyName 
-	 * @param phoneNumber 
-	 * @param emailAddress 
-	 * @param password 
+	 * @param firstName the first name of the inspector
+	 * @param lastName the last name of the inspector
+	 * @param companyName the name of the company
+	 * @param phoneNumber the phone number of the inspector
+	 * @param emailAddress the email address of the inspector
+	 * @param password the plaintext password of the inspector
 	 * @throws SanitizationException if any of the inputs is unsanitized
 	 */
 	public static checkAccountRegistrationInfoSanitization(firstName: string, lastName: string, companyName: string, phoneNumber: string, emailAddress: string, password: string): void {
@@ -265,7 +288,13 @@ export class Auth {
 			});
 			await newAccount.save();
 
-			const token = this.generateJWT({ userId: inspector.id });
+			const token = this.generateJWT(this.createJWTPayload(
+				"inspector",
+				newInspector.id,
+				newInspector.get("email"),
+				newInspector.get("firstName") + " " + newInspector.get("lastName"),
+				newAccount.id
+			));
 
 			return {
 				userId: inspector.id,

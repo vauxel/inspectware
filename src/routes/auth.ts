@@ -5,7 +5,7 @@ const AuthRouter = Router();
 
 AuthRouter.post("/login", async (req: Request, res: Response) => {
 	try {
-		let data = await Auth.loginUser(req.body.affiliation, req.body.loginname, req.body.password);
+		let data = await Auth.loginUser(req.body.affiliation, req.body.loginName, req.body.password);
 
 		res.json({
 			success: true,

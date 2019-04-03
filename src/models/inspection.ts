@@ -10,6 +10,14 @@ const InspectionSchema = new Mongoose.Schema({
 		type: Number,
 		required: [true, "An inspection number is required"]
 	},
+	scheduled: {
+		type: Date,
+		default: Date.now
+	},
+	date: {
+		type: Date,
+		required: [true, "A date is required"]
+	},
 	address: {
 		type: String,
 		required: [true, "An address is required"]
