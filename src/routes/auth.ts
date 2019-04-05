@@ -6,7 +6,7 @@ const AuthRouter = Router();
 
 AuthRouter.post("/login", async (req: Request, res: Response) => {
 	try {
-		let data = await Auth.loginUser(req.body.affiliation, req.body.loginName, req.body.password);
+		const data = await Auth.loginUser(req.body.affiliation, req.body.loginName, req.body.password);
 
 		res.json({
 			success: true,
@@ -24,7 +24,7 @@ AuthRouter.post("/login", async (req: Request, res: Response) => {
 
 AuthRouter.post("/signup", async (req: Request, res: Response) => {
 	try {
-		let data = await Auth.registerAccount(
+		const data = await Auth.registerAccount(
 			req.body.first_name,
 			req.body.last_name,
 			req.body.company_name,
@@ -53,6 +53,24 @@ AuthRouter.post("/update_pass", checkAuthorization, async (req: Request, res: Re
 
 		res.json({
 			success: true
+		});
+	} catch (e) {
+		res.json({
+			success: false,
+			error: {
+				message: e.getMessage
+			}
+		});
+	}
+});
+
+AuthRouter.get("/user_info", checkAuthorization, async (req: Request, res: Response) => {
+	try {
+		const data = await Auth.getUserInfo(res.locals.auth.affiliation, res.locals.auth.id);
+
+		res.json({
+			success: true,
+			data
 		});
 	} catch (e) {
 		res.json({

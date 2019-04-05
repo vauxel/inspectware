@@ -52,17 +52,19 @@ block content
 								input.form-control(type="text" id="inputCompanyName" placeholder="Company Name")
 							.form-group
 								label(for="inputPhone" id="labelPhone") Phone Number
-								input.form-control(type="text" id="inputPhone" placeholder="###-###-####")
+								input.form-control(type="tel" id="inputPhone" placeholder="###-###-####")
 							.form-group
 								label(for="inputEmail" id="labelEmail") Email Address
-								input.form-control(type="text" id="inputEmail" placeholder="Email Address")
+								input.form-control(type="email" id="inputEmail" placeholder="Email Address")
 							.form-group.row
 								.col
 									label(for="inputPass1" id="labelPass1") Password
 									input.form-control(type="password" id="inputPass1" placeholder="Password")
+									small.form-text Your password should be atleast 8 characters long, with atleast one lowercase letter, one uppercase letter, and one digit.
 								.col
 									label(for="inputPass2" id="labelPass2") Repeat Password
 									input.form-control(type="password" id="inputPass2" placeholder="Repeat Password")
+								
 							a.btn.btn-light.btn-lg.btn-block(href="#signup" onclick="submitSignupForm()")
 								| Sign Up
 								i.fas.fa-check-square

@@ -124,6 +124,23 @@ export class Auth {
 	}
 
 	/**
+	 * Gets a MongoDB model from an affiliation string
+	 * @param affiliation the affiliation (inspector / client / realtor)
+	 * @returns the MongoDB model associated with the affiliation string
+	 */
+	public static getModelFromAffiliation(affiliation: string) {
+		if (affiliation === "inspector") {
+			return Inspector;
+		} else if (affiliation === "client") {
+			return Client;
+		} else if (affiliation === "realtor") {
+			return Realtor;
+		} else {
+			throw new InvalidParametersException("Invalid affiliation");
+		}
+	}
+
+	/**
 	 * Checks the sanitization of the given login information
 	 * @param loginName the login name (email / username)
 	 * @param password the plaintext password
@@ -153,20 +170,7 @@ export class Auth {
 			throw new InvalidLoginException(e.getMessage);
 		}
 
-		let model;
-		switch (affiliation) {
-			case "inspector":
-				model = Inspector;
-				break;
-			case "client":
-				model = Client;
-				break;
-			case "realtor":
-				model = Realtor;
-				break;
-			default:
-				throw new InvalidLoginException("Invalid affiliation");
-		}
+		const model = this.getModelFromAffiliation(affiliation);
 
 		let user;
 		try {
@@ -190,7 +194,7 @@ export class Auth {
 			user.id,
 			user.get("email"),
 			user.get("firstName") + " " + user.get("lastName"),
-			affiliation == "inspector" ? user.get("account") : undefined
+			affiliation === "inspector" ? user.get("account") : undefined
 		));
 
 		return {
@@ -312,28 +316,12 @@ export class Auth {
 	/**
 	 * Updates the password of a user
 	 * @param affiliation the affiliation (inspector / client / realtor)
-	 * @param userId the id
+	 * @param userId the id of the user
 	 * @param currentPass the current plaintext password
 	 * @param newPass the new plaintext password
 	 */
 	public static async updatePassword(affiliation: string, userId: string, currentPass: string, newPass: string) {
-		let model;
-		switch (affiliation) {
-			case "inspector":
-				model = Inspector;
-				break;
-			case "client":
-				model = Client;
-				break;
-			case "realtor":
-				model = Realtor;
-				break;
-			default:
-				throw new InvalidParametersException("Invalid affiliation");
-		}
-
-		console.log(userId);
-		console.log(ShortId.isValid(userId));
+		const model = this.getModelFromAffiliation(affiliation);
 
 		if (!ShortId.isValid(userId)) {
 			throw new InvalidParametersException("Invalid user id");
@@ -364,5 +352,33 @@ export class Auth {
 
 		user.set("password", this.hashPassword(newPass));
 		await user.save();
+	}
+
+	/**
+	 * Gets the basic info for a user
+	 * @param affiliation the affiliation (inspector / client / realtor)
+	 * @param userId the id of the user
+	 */
+	public static async getUserInfo(affiliation: string, userId: string) {
+		const model = this.getModelFromAffiliation(affiliation);
+
+		let user;
+		try {
+			user = await model.findOne({ _id: userId });
+		} catch (e) {
+			throw new RuntimeException("Database error: " + e.message);
+		}
+
+		if (!user) {
+			throw new InvalidParametersException("Invalid user id");
+		}
+
+		return {
+			firstName: user.get("firstName"),
+			lastName: user.get("lastName"),
+			email: user.get("email"),
+			phone: user.get("phone"),
+			account: user.get("account")
+		};
 	}
 };
