@@ -1,11 +1,21 @@
 import { sign } from "jsonwebtoken";
 import { hashSync, compareSync } from "bcrypt";
 import { randomBytes } from "crypto";
+import ShortId from "shortid";
 import RuntimeException from "./exception";
 import Account from "../models/account";
 import Inspector from "../models/inspector";
 import Client from "../models/client";
 import Realtor from "../models/realtor";
+
+/**
+ * Exception thrown when given parameters are invalid
+ */
+export class InvalidParametersException extends RuntimeException {
+	public get getName(): string {
+		return "InvalidParametersException";
+	}
+};
 
 /**
  * Exception thrown when tested login credentials are invalid
@@ -38,6 +48,15 @@ export class SanitizationException extends RuntimeException {
  * Manages user authentication functionalities
  */
 export class Auth {
+	/** Regex used for name sanitization */
+	private static NAME_REGEX: RegExp = /^[a-z\-\.\,\'\~\ ]+$/i;
+	/** Regex used for password sanitization */
+	private static PASSWORD_REGEX: RegExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.{8,})/;
+	/** Regex used for email address sanitization */
+	private static EMAIL_REGEX: RegExp = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+	/** Regex used for phone number sanitization */
+	private static PHONE_REGEX: RegExp = /^(\+0?1\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/;
+
 	/** Secret used for generating JWTs */
 	private static secret: string;
 
@@ -48,6 +67,14 @@ export class Auth {
 		if(!this.secret) {
 			this.secret = randomBytes(64).toString("hex");
 		}
+	}
+
+	/**
+	 * Gets the secret used for generating JWTs
+	 * @returns the JWT secret
+	 */
+	public static getSecret(): string {
+		return this.secret;
 	}
 
 	/**
@@ -142,7 +169,6 @@ export class Auth {
 		}
 
 		let user;
-
 		try {
 			user = await model.findOne({ email: loginName });
 		} catch (e) {
@@ -153,7 +179,7 @@ export class Auth {
 			throw new InvalidLoginException("Invalid login credentials");
 		}
 
-		let validPassword = this.validatePassword(password, user.get("password"));
+		const validPassword = this.validatePassword(password, user.get("password"));
 
 		if (user.get("email") != loginName || !validPassword) {
 			throw new InvalidLoginException("Invalid login credentials");
@@ -184,13 +210,11 @@ export class Auth {
 	 * @throws SanitizationException if any of the inputs is unsanitized
 	 */
 	public static checkAccountRegistrationInfoSanitization(firstName: string, lastName: string, companyName: string, phoneNumber: string, emailAddress: string, password: string): void {
-		let nameRegex = /^[a-z\-\.\,\'\~\ ]+$/i;
-
-		if (!firstName || !nameRegex.test(firstName)) {
+		if (!firstName || !this.NAME_REGEX.test(firstName)) {
 			throw new SanitizationException("Please supply a valid, alphabetic first name");
 		}
 
-		if (!lastName || !nameRegex.test(lastName)) {
+		if (!lastName || !this.NAME_REGEX.test(lastName)) {
 			throw new SanitizationException("Please supply a valid, alphabetic last name");
 		}
 
@@ -198,36 +222,16 @@ export class Auth {
 			throw new SanitizationException("Please supply a valid company name");
 		}
 
-		let phoneRegex = /^(\+0?1\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/;
-
-		if (!phoneNumber || !phoneRegex.test(phoneNumber)) {
+		if (!phoneNumber || !this.PHONE_REGEX.test(phoneNumber)) {
 			throw new SanitizationException("Please supply a valid phone number");
 		}
 
-		let emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-
-		if (!emailAddress || !emailRegex.test(emailAddress)) {
+		if (!emailAddress || !this.EMAIL_REGEX.test(emailAddress)) {
 			throw new SanitizationException("Please supply a valid email address");
 		}
 
-		if (!password) {
-			throw new SanitizationException("Please supply a valid password");
-		} else {
-			if (password.length < 8) {
-				throw new SanitizationException("Please supply a valid password (longer than 8 characters)");
-			}
-
-			if (!(/[a-z]/.test(password))) {
-				throw new SanitizationException("Please supply a valid password (atleast 1 lowercase letter, 1 uppercase letter, and 1 number)");
-			}
-
-			if (!(/[A-Z]/.test(password))) {
-				throw new SanitizationException("Please supply a valid password (atleast 1 lowercase letter, 1 uppercase letter, and 1 number)");
-			}
-
-			if (!(/[\d]/.test(password))) {
-				throw new SanitizationException("Please supply a valid password (atleast 1 lowercase letter, 1 uppercase letter, and 1 number)");
-			}
+		if (!password || !this.PASSWORD_REGEX.test(password)) {
+			throw new SanitizationException("Please supply a valid password (atleast 8 characters, with atleast 1 lowercase letter, 1 uppercase letter, and 1 number)");
 		}
 	}
 
@@ -303,5 +307,62 @@ export class Auth {
 		} catch (e) {
 			throw new RuntimeException("Database error: " + e.message);
 		}
+	}
+
+	/**
+	 * Updates the password of a user
+	 * @param affiliation the affiliation (inspector / client / realtor)
+	 * @param userId the id
+	 * @param currentPass the current plaintext password
+	 * @param newPass the new plaintext password
+	 */
+	public static async updatePassword(affiliation: string, userId: string, currentPass: string, newPass: string) {
+		let model;
+		switch (affiliation) {
+			case "inspector":
+				model = Inspector;
+				break;
+			case "client":
+				model = Client;
+				break;
+			case "realtor":
+				model = Realtor;
+				break;
+			default:
+				throw new InvalidParametersException("Invalid affiliation");
+		}
+
+		console.log(userId);
+		console.log(ShortId.isValid(userId));
+
+		if (!ShortId.isValid(userId)) {
+			throw new InvalidParametersException("Invalid user id");
+		}
+
+		let user;
+		try {
+			user = await model.findOne({ _id: userId });
+		} catch (e) {
+			throw new RuntimeException("Database error: " + e.message);
+		}
+
+		if (!user) {
+			throw new InvalidParametersException("Invalid user id");
+		}
+
+		if (!currentPass) {
+			throw new InvalidParametersException("Invalid current password");
+		}
+
+		if (!this.validatePassword(currentPass, user.get("password"))) {
+			throw new InvalidParametersException("Incorrect current password");
+		}
+
+		if (!newPass || !this.PASSWORD_REGEX.test(newPass)) {
+			throw new SanitizationException("Please supply a valid new password (atleast 8 characters, with atleast 1 lowercase letter, 1 uppercase letter, and 1 number)");
+		}
+
+		user.set("password", this.hashPassword(newPass));
+		await user.save();
 	}
 };
