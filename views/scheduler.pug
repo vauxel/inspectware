@@ -1,0 +1,705 @@
+html
+	head
+		meta(name="viewport" content="width=device-width initial-scale=1 shrink-to-fit=no")
+		title Inspection Scheduler
+		link(rel="stylesheet" href="/css/scheduler.css")
+		link(rel="stylesheet" href="http://unpkg.com/iview/dist/styles/iview.css")
+		link(rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous")
+		link(rel="stylesheet" href="https://api.tiles.mapbox.com/mapbox-gl-js/v1.2.0/mapbox-gl.css")
+		script(src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.min.js")
+		script(src="http://unpkg.com/iview/dist/iview.min.js")
+		script(src="http://unpkg.com/iview/dist/locale/en-US.js")
+		script(src="https://cdn.jsdelivr.net/npm/v-mask/dist/v-mask.min.js")
+		script(src="https://api.tiles.mapbox.com/mapbox-gl-js/v1.2.0/mapbox-gl.js")
+	body
+		#app
+			.section
+				.section-header
+					.section-title {{ sections[section] }}
+					.section-progress
+						i-progress(:percent="progress" hide-info)
+				.section-content
+					.section-content-inner.inner-centered.splash(v-if="section === 0")
+						.splash-subtitle Schedule an inspection with
+						.splash-title {{ account }}
+						i-button(type="primary" @click="nextSection") Proceed to Scheduling
+					.section-content-inner.inner-centered.services(v-show="section === 1")
+						ul.services-list
+							li(v-for="(service, id) in services" v-key="service")
+								Checkbox(v-model="services[id].value") {{ service.name }}
+					.section-content-inner.property-details(v-show="section === 2")
+						.property-details-form
+							i-form(ref="propertyForm" :model="property" :rules="propertyRules" label-position="left" :label-width="120")
+								form-item(label="Address" prop="address1")
+									row
+										i-col(span="14")
+											auto-complete(
+												v-model="property.address1"
+												@on-search="matchPropertyAddress"
+												@on-select="autofillPropertyAddress"
+												@on-focus="clearPropertyAddress"
+												@on-blur="resolvePropertyAddress"
+												placeholder="Enter the primary address")
+												i-option(v-for="address in propertyAddressMatches" :value="address") {{ address["place_name"] }}
+										i-col(span="10")
+											i-input(v-model="property.address2" placeholder="Optional secondary address" style="padding-left: 15px")
+								form-item(label="City" prop="city")
+									i-select(
+										v-model="property.city"
+										filterable
+										remote
+										:remote-method="matchPropertyCity"
+										:loading="matchingPropertyCity"
+										@on-change="resolvePropertyAddress"
+										placeholder="Enter the city")
+										i-option(v-for="city in propertyCityMatches" :value="city") {{ city }}
+								form-item(label="State" prop="state")
+									i-select(
+										v-model="property.state"
+										filterable
+										@on-change="resolvePropertyAddress"
+										placeholder="Select the state")
+										i-option(v-for="(long, short) in stateList" :value="short") {{ long }}
+								form-item(label="ZIP Code" prop="zip")
+									i-input(v-model="property.zip" @on-blur="resolvePropertyAddress" placeholder="Enter the digit zip code" v-mask="'#####'")
+								form-item(label="Square Footage" prop="sqft")
+									i-input(v-model="property.sqft" placeholder="Enter the whole-number square footage" v-mask="'######'")
+								form-item(label="Age of Home" prop="age")
+									i-input(v-model="property.age" placeholder="Enter the age of the home" v-mask="'###'")
+								form-item(label="Foundation Type" prop="type")
+									i-select(v-model="property.type" placeholder="Choose the foundation type")
+										i-option(value="slab") Slab
+										i-option(value="crawlspace") Crawlspace
+										i-option(value="basement") Basement
+						.property-details-map
+							.property-details-invalid(v-if="!knownPropertyAddress") Please Enter a Valid Address
+							#propertyMap
+					.section-content-inner.client-details(v-show="section === 4")
+						checkbox(size="large" v-model="usingClient" :disabled="!usingRealtor") I have a client I wish to enter
+						.realtor-client-toggle-text Information from either a realtor or a client is needed to schedule an inspection
+						row(:gutter="20" v-if="usingClient")
+							i-col(span="12")
+								.client-details-title Client One's Information
+								i-form(ref="client1Form" :model="client1" :rules="clientRules" label-position="top")
+									form-item(label="First Name" prop="firstName")
+										i-input(v-model="client1.firstName" placeholder="Enter the first client's first name")
+									form-item(label="Last Name" prop="lastName")
+										i-input(v-model="client1.lastName" placeholder="Enter the first client's last name")
+									form-item(label="Email Address" prop="email")
+										i-input(v-model="client1.email" placeholder="Enter the first client's email address")
+									form-item(label="Phone Number" prop="phone")
+										i-input(v-model="client1.phone" placeholder="Enter the first client's phone number" v-mask="'(###) ###-####'")
+									form-item(label="Current Address" prop="address")
+										i-input(v-model="client1.address" placeholder="Enter the first client's current address")
+									form-item(label="Current City" prop="city")
+										i-input(v-model="client1.city" placeholder="Enter the first client's current city")
+									form-item(label="Current State" prop="state")
+										i-select(
+											v-model="client1.state"
+											filterable
+											placeholder="Select the first client's current state")
+											i-option(v-for="(long, short) in stateList" :value="short") {{ long }}
+									form-item(label="Current ZIP Code" prop="zip")
+										i-input(v-model="client1.zip" placeholder="Enter the first client's current zip code" v-mask="'#####'")
+							i-col(span="12")
+								.client-details-title Client Two's Information
+									.client-details-subtitle (Optional)
+								i-form(ref="client2Form" :model="client2" label-position="top")
+									form-item(label="First Name" prop="firstName")
+										i-input(v-model="client2.firstName" placeholder="Enter the second client's first name")
+									form-item(label="Last Name" prop="lastName")
+										i-input(v-model="client2.lastName" placeholder="Enter the second client's last name")
+									form-item(label="Email Address" prop="email")
+										i-input(v-model="client2.email" placeholder="Enter the second client's email address")
+									form-item(label="Phone Number" prop="phone")
+										i-input(v-model="client2.phone" placeholder="Enter the second client's phone number" v-mask="'(###) ###-####'")
+									form-item(label="Current Address" prop="address")
+										i-input(v-model="client2.address" placeholder="Enter the second client's current address")
+									form-item(label="Current City" prop="city")
+										i-input(v-model="client2.city" placeholder="Enter the second client's current city")
+									form-item(label="Current State" prop="state")
+										i-select(
+											v-model="client2.state"
+											filterable
+											placeholder="Select the second client's current state")
+											i-option(v-for="(long, short) in stateList" :value="short") {{ long }}
+									form-item(label="Current ZIP Code" prop="zip")
+										i-input(v-model="client2.zip" placeholder="Enter the second client's current zip code" v-mask="'#####'")
+					.section-content-inner.realtor-details(v-show="section === 5")
+						checkbox(size="large" v-model="usingRealtor" :disabled="!usingClient") I have a real estate agent I wish to enter
+						.realtor-client-toggle-text Information from either a realtor or a client is needed to schedule an inspection
+						i-form(ref="realtorForm" :model="realtor" :rules="realtorRules" label-position="top" v-if="usingRealtor")
+							form-item(label="First Name" prop="firstName")
+								i-input(v-model="realtor.firstName" placeholder="Enter the realtor's first name")
+							form-item(label="Last Name" prop="lastName")
+								i-input(v-model="realtor.lastName" placeholder="Enter the realtor's last name")
+							form-item(label="Affiliation (Company)" prop="affiliation")
+								i-input(v-model="realtor.affiliation" placeholder="Enter the realtor's affiliation/company")
+							form-item(label="Email Address" prop="email")
+								i-input(v-model="realtor.email" placeholder="Enter the realtor's email address")
+							form-item(label="Primary Phone Number" prop="primaryPhone")
+								row
+									i-col(span="14")
+										i-input(v-model="realtor.primaryPhone" placeholder="Enter the realtor's primary phone number" v-mask="'(###) ###-####'")
+									i-col(span="10")
+										i-select(v-model="realtor.primaryPhoneType" placeholder="Choose the type of the primary phone number" style="padding-left: 15px")
+											i-option(value="cell") Cell
+											i-option(value="work") Work
+											i-option(value="other") Other
+							form-item(label="Secondary Phone Number" prop="secondaryPhone")
+								row
+									i-col(span="14")
+										i-input(v-model="realtor.secondaryPhone" placeholder="Enter the realtor's secondary phone number" v-mask="'(###) ###-####'")
+									i-col(span="10")
+										i-select(v-model="realtor.secondaryPhoneType" placeholder="Choose the type of the secondary phone number" style="padding-left: 15px")
+											i-option(value="cell") Cell
+											i-option(value="work") Work
+											i-option(value="other") Other
+							form-item(label="Address" prop="address")
+								i-input(v-model="realtor.address" placeholder="Enter the realtor's address")
+							form-item(label="City" prop="city")
+								i-input(v-model="realtor.city" placeholder="Enter the realtor's city")
+							form-item(label="State" prop="state")
+								i-select(
+									v-model="realtor.state"
+									filterable
+									placeholder="Select the realtor's state")
+									i-option(v-for="(long, short) in stateList" :value="short") {{ long }}
+							form-item(label="Current ZIP Code" prop="zip")
+								i-input(v-model="realtor.zip" placeholder="Enter the realtor's zip code" v-mask="'#####'")
+				.section-footer
+					.branding
+						.branding-text Powered By
+						a(class="branding-company" href="#") inspectware
+					.section-controls(v-show="section !== 0")
+						i-button(@click="prevSection") Back
+						i-button(type="primary" @click="validateSection") Next
+			.sidebar(v-show="section > 2")
+				.sidebar-header Inspection Details
+				.sidebar-container
+					.sidebar-pair(v-if="section > 1")
+						.sidebar-key Services
+						.sidebar-value
+							span(v-html="chosenServicesString")
+					.sidebar-section(v-if="section > 2") Property Information
+					.sidebar-section-content(v-if="section > 2")
+						.sidebar-pair
+							.sidebar-key Address
+							.sidebar-value {{ propertyFullAddress }}
+						.sidebar-pair
+							.sidebar-key Square Footage
+							.sidebar-value {{ property.sqft }}
+						.sidebar-pair
+							.sidebar-key Age of Home
+							.sidebar-value {{ property.age }}
+						.sidebar-pair
+							.sidebar-key Foundation Type
+							.sidebar-value {{ property.type }}
+					.sidebar-section(v-if="section > 3") Appointment Information
+					.sidebar-section-content(v-if="section > 3")
+						.sidebar-pair
+							.sidebar-key Calendar Date
+							.sidebar-value {{ appointment.date }}
+						.sidebar-pair
+							.sidebar-key Time Slot
+							.sidebar-value {{ appointment.time }}
+						.sidebar-pair
+							.sidebar-key Inspector
+							.sidebar-value {{ appointment.inspector }}
+					.sidebar-section(v-if="section > 4 && usingClient") Client One Information
+					.sidebar-section-content(v-if="section > 4 && usingClient")
+						.sidebar-pair
+							.sidebar-key Full Name
+							.sidebar-value {{ client1.firstName }} {{ client1.lastName }}
+						.sidebar-pair
+							.sidebar-key Email Address
+							.sidebar-value {{ client1.email }}
+						.sidebar-pair
+							.sidebar-key Phone Number
+							.sidebar-value {{ client1.phone }}
+						.sidebar-pair(v-if="client1FullAddress")
+							.sidebar-key Current Address
+							.sidebar-value {{ client1FullAddress }}
+					.sidebar-section(v-if="section > 4 && usingClient && (client2.firstName || client2.lastName || client2.email || client2.phone || client2FullAddress)") Client Two Information
+					.sidebar-section-content(v-if="section > 4 && usingClient && (client2.firstName || client2.lastName || client2.email || client2.phone || client2FullAddress)")
+						.sidebar-pair(v-if="client2.firstName || client2.lastName")
+							.sidebar-key Full Name
+							.sidebar-value {{ client2.firstName }} {{ client2.lastName }}
+						.sidebar-pair(v-if="client2.email")
+							.sidebar-key Email Address
+							.sidebar-value {{ client2.email }}
+						.sidebar-pair(v-if="client2.phone")
+							.sidebar-key Phone Number
+							.sidebar-value {{ client2.phone }}
+						.sidebar-pair(v-if="client2FullAddress")
+							.sidebar-key Current Address
+							.sidebar-value {{ client2FullAddress }}
+					.sidebar-section(v-if="section > 5 && usingRealtor") Realtor Information
+					.sidebar-section-content(v-if="section > 5 && usingRealtor")
+						.sidebar-pair
+							.sidebar-key Full Name
+							.sidebar-value {{ realtor.firstName }} {{ realtor.lastName }}
+						.sidebar-pair(v-if="realtor.affiliation")
+							.sidebar-key Affiliation (Company)
+							.sidebar-value {{ realtor.affiliation }}
+						.sidebar-pair
+							.sidebar-key Email Address
+							.sidebar-value {{ realtor.email }}
+						.sidebar-pair
+							.sidebar-key Primary Phone Number
+							.sidebar-value {{ realtor.primaryPhone }} {{ realtor.primaryPhoneType }}
+						.sidebar-pair(v-if="realtor.secondaryPhone")
+							.sidebar-key Secondary Phone Number
+							.sidebar-value {{ realtor.secondaryPhone }} {{ realtor.secondaryPhoneType }}
+						.sidebar-pair(v-if="realtorFullAddress")
+							.sidebar-key Address
+							.sidebar-value {{ realtorFullAddress }}
+				.sidebar-invoice(v-if="section > 2")
+					.sidebar-invoice-title Inspection Invoice
+					.sidebar-invoice-item
+						.sidebar-key Full Inspection
+						.sidebar-value $400.00
+					.sidebar-invoice-item
+						.sidebar-key Radon Inspection
+						.sidebar-value $25.00
+					.sidebar-invoice-item
+						.sidebar-key Termite Inspection
+						.sidebar-value $50.00
+					hr
+					.sidebar-invoice-item.sidebar-invoice-item-totals
+						.sidebar-key Subtotal
+						.sidebar-value $475.00
+					.sidebar-invoice-item.sidebar-invoice-item-totals
+						.sidebar-key Taxes
+						.sidebar-value $10.00
+					hr
+					.sidebar-invoice-item.sidebar-invoice-item-totals.sidebar-invoice-item-final
+						.sidebar-key Total Amount
+						.sidebar-value $485.00
+
+	script.
+		const accountId = "#{accountId}";
+		const accountName = "#{accountName}";
+		iview.lang("en-US");
+		Vue.directive("mask", VueMask.VueMaskDirective);
+
+		const app = new Vue({
+			el: "#app",
+			data: {
+				mapAccessToken: "pk.eyJ1IjoiaW5zcGVjdHdhcmUiLCJhIjoiY2p5dDBkZjJ1MDByZzNvbWZmMDV4NnI2MiJ9.HYKSg6GlZrG7xz15KxwaIQ",
+				section: 5,
+				sections: [
+					"Inspection Scheduler",
+					"Services",
+					"Property Information",
+					"Choose an Appointment",
+					"Client Information",
+					"Realtor Information"
+				],
+				id: accountId,
+				account: accountName,
+				services: {
+					"full_home": {
+						name: "Full Home Inspection",
+						value: false
+					},
+					"pre_insul": {
+						name: "Pre-Insulation Inspection",
+						value: false,
+					},
+					"radon": {
+						name: "Radon Services",
+						value: false,
+					},
+					"termite": {
+						name: "Termite Inspection",
+						value: false,
+					}
+				},
+				property: {
+					address1: "",
+					address2: "",
+					city: "",
+					state: "",
+					zip: "",
+					sqft: "",
+					age: "",
+					type: ""
+				},
+				propertyAddressMatches: [],
+				propertyCityMatches: [],
+				matchingPropertyCity: false,
+				propertyRules: {
+					address1: [{ required: true, message: "The address cannot be blank", trigger: "change" }],
+					city: [{ required: true, message: "The city cannot be blank", trigger: "change" }],
+					state: [{ required: true, message: "The state cannot be blank", trigger: "change" }],
+					zip: [{ required: true, message: "The zip code cannot be blank", trigger: "blur" }],
+					sqft: [{ required: true, message: "The square footage cannot be blank", trigger: "blur" }],
+					age: [{ required: true, message: "The age of the home cannot be blank", trigger: "blur" }],
+					type: [{ required: true, message: "The foundation type cannot be blank", trigger: "change" }]
+				},
+				propertyMap: undefined,
+				propertyMapMarker: undefined,
+				knownPropertyAddress: false,
+				stateList: { "AL": "Alabama", "AK": "Alaska", "AS": "American Samoa", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "DC": "District Of Columbia", "FM": "Federated States Of Micronesia", "FL": "Florida", "GA": "Georgia", "GU": "Guam", "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa", "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MH": "Marshall Islands", "MD": "Maryland", "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi", "MO": "Missouri", "MT": "Montana", "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire", "NJ": "New Jersey", "NM": "New Mexico", "NY": "New York", "NC": "North Carolina", "ND": "North Dakota", "MP": "Northern Mariana Islands", "OH": "Ohio", "OK": "Oklahoma", "OR": "Oregon", "PW": "Palau", "PA": "Pennsylvania", "PR": "Puerto Rico", "RI": "Rhode Island", "SC": "South Carolina", "SD": "South Dakota", "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont", "VI": "Virgin Islands", "VA": "Virginia", "WA": "Washington", "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming" },
+				appointment: {
+					date: "",
+					time: "",
+					inspector: ""
+				},
+				usingClient: true,
+				client1: {
+					firstName: "",
+					lastName: "",
+					email: "",
+					phone: "",
+					address: "",
+					city: "",
+					state: "",
+					zip: ""
+				},
+				client2: {
+					firstName: "",
+					lastName: "",
+					email: "",
+					phone: "",
+					address: "",
+					city: "",
+					state: "",
+					zip: ""
+				},
+				clientRules: {
+					firstName: [{ required: true, message: "The first name cannot be blank", trigger: "blur" }],
+					lastName: [{ required: true, message: "The last name cannot be blank", trigger: "blur" }],
+					email: [
+						{ required: true, message: "The email address cannot be blank", trigger: "blur" },
+						{ type: "email", message: "Please enter a valid email address", trigger: "blur" }
+					],
+					phone: [{ required: true, message: "The phone number cannot be blank", trigger: "blur" }]
+				},
+				usingRealtor: true,
+				realtor: {
+					firstName: "",
+					lastName: "",
+					affiliation: "",
+					email: "",
+					primaryPhone: "",
+					primaryPhoneType: "cell",
+					secondaryPhone: "",
+					secondaryPhoneType: "work",
+					address: "",
+					city: "",
+					state: "",
+					zip: ""
+				},
+				realtorRules: {
+					firstName: [{ required: true, message: "The first name cannot be blank", trigger: "blur" }],
+					lastName: [{ required: true, message: "The last name cannot be blank", trigger: "blur" }],
+					email: [
+						{ required: true, message: "The email address cannot be blank", trigger: "blur" },
+						{ type: "email", message: "Please enter a valid email address", trigger: "blur" }
+					],
+					primaryPhone: [{ required: true, message: "The primary phone number cannot be blank", trigger: "blur" }],
+					primaryPhoneType: [{ required: true, message: "The primary phone number type cannot be blank", trigger: "change" }]
+				},
+			},
+			methods: {
+				prevSection: function() {
+					this.section--;
+				},
+				nextSection: function() {
+					this.section++;
+				},
+				validateSection: function() {
+					let passed = false;
+
+					if (this.section === 1) { // Services
+						let foundTrue = false;
+
+						for (id in this.services) {
+							foundTrue = foundTrue || this.services[id].value;
+						}
+
+						if (!foundTrue) {
+							this.$Modal.error({
+								title: "Minimum Services Requirement",
+								content: "You must select atleast one service to schedule."
+							});
+						} else {
+							passed = true;
+						}
+					} else if (this.section === 2) { // Property Information
+						this.$refs["propertyForm"].validate((valid) => {
+							if (!valid) {
+								this.$Modal.error({
+									title: "Invalid Property Details",
+									content: "Please review the property details and remedy the errors.",
+								});
+							} else if (!this.knownPropertyAddress) {
+								this.$Modal.confirm({
+									title: "Unknown Property Address",
+									content: `<p>The following property address could not be located: <code>${this.propertyFullAddress}</code></p><br><p>This could potentially be due to the property being newer than the map database. Do you still want to proceed?</p>`,
+									okText: "Proceed",
+									cancelText: "Cancel",
+									onOk: () => {
+										this.nextSection();
+									}
+								});
+							} else {
+								passed = true;
+							}
+						});
+					} else if (this.section === 3) { // Appointment Information
+						passed = true;
+					} else if (this.section === 4) { // Client Information
+						if (this.usingClient) {
+							let client1Valid = false;
+							let client2Valid = false;
+
+							this.$refs["client1Form"].validate((valid) => {
+								if (valid) {
+									client1Valid = true;
+								}
+							});
+
+							this.$refs["client2Form"].validate((valid) => {
+								if (valid) {
+									client2Valid = true;
+								}
+							});
+
+							if (!client1Valid || !client2Valid) {
+								this.$Modal.error({
+									title: "Invalid Client Details",
+									content: "Please review the client details and remedy the errors.",
+								});
+							}
+
+							passed = client1Valid && client2Valid;
+						} else {
+							passed = true;
+						}
+					} else if (this.section === 5) { // Realtor Information
+						if (this.usingRealtor) {
+							this.$refs["realtorForm"].validate((valid) => {
+								if (valid) {
+									passed = true;
+								} else {
+									this.$Modal.error({
+										title: "Invalid Realtor Details",
+										content: "Please review the realtor details and remedy the errors.",
+									});
+								}
+							});
+						} else {
+							passed = true;
+						}
+					}
+
+					if (passed) {
+						this.nextSection();
+					}
+				},
+				matchPropertyAddress: function(value) {
+					let req = new XMLHttpRequest();
+					let self = this;
+
+					req.addEventListener("load", function() {
+						let data = JSON.parse(this.responseText);
+						self.propertyAddressMatches = [];
+
+						for (let i = 0; i < data.features.length; i++) {
+							if (data.features[i]["address"]) {
+								self.propertyAddressMatches.push(data.features[i]);
+							}
+						}
+					});
+
+					const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURI(value)}.json?autocomplete=true&country=us&types=address&access_token=${self.mapAccessToken}`;
+
+					req.open("GET", url);
+					req.send();
+				},
+				autofillPropertyAddress: function(value) {
+					if (value["context"].length === 5) {
+						value["context"].shift();
+					}
+
+					this.property.zip = value["context"].shift()["text"];
+					this.property.city = value["context"].shift()["text"];
+					this.property.state = value["context"].shift()["short_code"].split("-").pop();
+					this.property.address1 = value["address"] + " " + value["text"];
+
+					this.knownPropertyAddress = true;
+					this.updatePropertyMap(value["geometry"]["coordinates"]);
+				},
+				clearPropertyAddress: function() {
+					this.propertyAddressMatches = [];
+				},
+				matchPropertyCity: function(value) {
+					let req = new XMLHttpRequest();
+					let self = this;
+					self.matchingPropertyCity = true;
+
+					req.addEventListener("load", function() {
+						let data = JSON.parse(this.responseText);
+						let uniqueCities = [];
+
+						for (let i = 0; i < data.features.length; i++) {
+							if (!uniqueCities.includes(data.features[i]["text"])) {
+								uniqueCities.push(data.features[i]["text"]);
+							}
+						}
+
+						self.propertyCityMatches = uniqueCities;
+						self.matchingPropertyCity = false;
+					});
+
+					const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURI(value)}.json?autocomplete=true&country=us&types=place&access_token=${self.mapAccessToken}`;
+
+					req.open("GET", url);
+					req.send();
+				},
+				zipValidator: (rule, value, callback) => {
+					if (value === "") {
+						callback(new Error("The zip code cannot be blank!"));
+					} else if (!(/^\d{5}(\-\d{4})?$/.test(value))) {
+						callback(new Error("Please enter a valid zip code format"));
+					} else {
+						callback();
+					}
+				},
+				sqftValidator: (rule, value, callback) => {
+					if (value === "") {
+						callback(new Error("The square footage cannot be blank!"));
+					} else if (!(/^\d+$/.test(value))) {
+						callback(new Error("Please enter a valid square footage"));
+					} else {
+						callback();
+					}
+				},
+				ageValidator: (rule, value, callback) => {
+					if (value === "") {
+						callback(new Error("The age of the home cannot be blank!"));
+					} else if (!Number.isInteger(value) && value > 0) {
+						callback(new Error("Please enter a valid age"));
+					} else {
+						callback();
+					}
+				},
+				clientContactValidator: (rule, value, callback) => {
+					console.log("CALLED");
+				},
+				updatePropertyMap: function(coords) {
+					if (!this.propertyMap) {
+						this.propertyMap = new mapboxgl.Map({
+							container: "propertyMap",
+							style: "mapbox://styles/mapbox/streets-v11",
+							center: coords,
+							zoom: 13
+						});
+					} else {
+						this.propertyMap.flyTo({center: coords});
+					}
+
+					if (!this.propertyMapMarker) {
+						this.propertyMapMarker = new mapboxgl.Marker().setLngLat(coords).addTo(this.propertyMap);
+					} else {
+						this.propertyMapMarker.setLngLat(coords);
+					}
+				},
+				deletePropertyMap: function() {
+					if (this.propertyMap) {
+						if (this.propertyMapMarker) {
+							this.propertyMapMarker.remove();
+							this.propertyMapMarker = undefined;
+						}
+
+						this.propertyMap.remove();
+						this.propertyMap = undefined;
+					}
+				},
+				resolvePropertyAddress: function() {
+					setTimeout(() => {
+						if (this.property.address1 === "" || this.property.city === "" || this.property.state === "" || this.property.zip === "") {
+							return;
+						}
+
+						let req = new XMLHttpRequest();
+						let coords = undefined;
+						const address = `${this.property.address1}, ${this.property.city}, ${this.stateList[this.property.state]} ${this.property.zip}, United States`;
+
+						let self = this;
+						req.addEventListener("load", function() {
+							let data = JSON.parse(this.responseText);
+
+							if (data.features.length === 0) {
+								return;
+							}
+
+							if (data.features[0]["place_name"].toUpperCase() === address.toUpperCase()) {
+								self.knownPropertyAddress = true;
+								self.updatePropertyMap(data.features[0]["geometry"]["coordinates"]);
+							} else {
+								self.knownPropertyAddress = false;
+								self.deletePropertyMap();
+							}
+						});
+
+						const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURI(address)}.json?autocomplete=false&country=us&types=address&limit=1&access_token=${self.mapAccessToken}`;
+
+						req.open("GET", url);
+						req.send();
+					}, 100);
+				}
+			},
+			computed: {
+				progress: function() {
+					return (this.section / this.sections.length) * 100;
+				},
+				propertyFullAddress: function() {
+					let address1 = this.property.address1 ? this.property.address1 : "*BLANK*";
+					let address2 = this.property.address2 ? " " + this.property.address2 : "";
+					let city = this.property.city ? this.property.city : "*BLANK*";
+					let state = this.property.state ? this.property.state : "*BLANK*";
+					let zip = this.property.zip ? this.property.zip : "*BLANK*";
+					return `${address1}${address2}, ${city}, ${state} ${zip}`;
+				},
+				client1FullAddress: function() {
+					if (!(this.client1.address && this.client1.city && this.client1.state && this.client1.zip)) {
+						return "";
+					}
+
+					return `${this.client1.address}, ${this.client1.city}, ${this.client1.state} ${this.client1.zip}`;
+				},
+				client2FullAddress: function() {
+					if (!(this.client2.address && this.client2.city && this.client2.state && this.client2.zip)) {
+						return "";
+					}
+					
+					return `${this.client2.address}, ${this.client2.city}, ${this.client2.state} ${this.client2.zip}`;
+				},
+				realtorFullAddress: function() {
+					if (!(this.realtor.address && this.realtor.city && this.realtor.state && this.realtor.zip)) {
+						return "";
+					}
+					
+					return `${this.realtor.address}, ${this.realtor.city}, ${this.realtor.state} ${this.realtor.zip}`;
+				},
+				chosenServicesString: function() {
+					let chosenServices = "<ul style='padding-left: 10px;'>";
+
+					for (id in this.services) {
+						if (this.services[id].value) {
+							chosenServices += "<li>" + this.services[id].name + "</li>";
+						}
+					}
+
+					chosenServices += "</ul>";
+					return chosenServices;
+				}
+			},
+			mounted: function() {
+				mapboxgl.accessToken = this.mapAccessToken;
+			}
+		});
