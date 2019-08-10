@@ -23,11 +23,11 @@ html
 						.splash-subtitle Schedule an inspection with
 						.splash-title {{ account }}
 						i-button(type="primary" @click="nextSection") Proceed to Scheduling
-					.section-content-inner.inner-centered.services(v-show="section === 1")
+					.section-content-inner.inner-centered.services(v-if="section === 1")
 						ul.services-list
 							li(v-for="(service, id) in services" v-key="service")
 								Checkbox(v-model="services[id].value") {{ service.name }}
-					.section-content-inner.property-details(v-show="section === 2")
+					.section-content-inner.property-details(v-if="section === 2")
 						.property-details-form
 							i-form(ref="propertyForm" :model="property" :rules="propertyRules" label-position="left" :label-width="120")
 								form-item(label="Address" prop="address1")
@@ -74,7 +74,38 @@ html
 						.property-details-map
 							.property-details-invalid(v-if="!knownPropertyAddress") Please Enter a Valid Address
 							#propertyMap
-					.section-content-inner.client-details(v-show="section === 4")
+					.section-content-inner.appointment-details(v-if="section === 3")
+						.calendar
+							.calendar-header
+								.calendar-month {{ calMonthName }} {{ calYear }}
+								.calendar-buttons
+									button-group
+										i-button(@click="calSetMonth(0)") {{ calFutureMonthName(0) }}
+										i-button(@click="calSetMonth(1)") {{ calFutureMonthName(1) }}
+										i-button(@click="calSetMonth(2)") {{ calFutureMonthName(2) }}
+							.calendar-body
+								table.calendar-table
+									thead
+										th Sunday
+										th Monday
+										th Tuesday
+										th Wednesday
+										th Thursday
+										th Friday
+										th Saturday
+									tbody
+										tr(v-for="x in 6" :key="x")
+											td(v-for="y in 7" :key="y")
+												.date(:class="{ 'date-inactive': !calIsThisMonth(x, y) || calIsInPast(x, y), 'date-today': calIsToday(x, y) }")
+													.date-header
+														span.date-number {{ calGetDay(x, y) }}
+														span.date-weekday {{ calGetWeekday(y) }}
+													ul.date-timeslots
+														li.date-timeslot(v-for="timeslot in calTimeSlotsForDay(x, y)" :key="timeslot" :class="{ 'date-timeslot-unavailable': !timeslot.available }" @click="chooseAppointment(timeslot, calGetDayDate(x, y))")
+															.date-timeslot-indicator {{ timeslot.available ? "➕" : "🚫" }}
+															.date-timeslot-time {{ formatTime(timeslot.time) }}
+															.date-timeslot-inspector {{ timeslot.inspector }}
+					.section-content-inner.client-details(v-if="section === 4")
 						checkbox(size="large" v-model="usingClient" :disabled="!usingRealtor") I have a client I wish to enter
 						.realtor-client-toggle-text Information from either a realtor or a client is needed to schedule an inspection
 						row(:gutter="20" v-if="usingClient")
@@ -125,7 +156,7 @@ html
 											i-option(v-for="(long, short) in stateList" :value="short") {{ long }}
 									form-item(label="Current ZIP Code" prop="zip")
 										i-input(v-model="client2.zip" placeholder="Enter the second client's current zip code" v-mask="'#####'")
-					.section-content-inner.realtor-details(v-show="section === 5")
+					.section-content-inner.realtor-details(v-if="section === 5")
 						checkbox(size="large" v-model="usingRealtor" :disabled="!usingClient") I have a real estate agent I wish to enter
 						.realtor-client-toggle-text Information from either a realtor or a client is needed to schedule an inspection
 						i-form(ref="realtorForm" :model="realtor" :rules="realtorRules" label-position="top" v-if="usingRealtor")
@@ -174,7 +205,7 @@ html
 					.section-controls(v-show="section !== 0")
 						i-button(@click="prevSection") Back
 						i-button(type="primary" @click="validateSection") Next
-			.sidebar(v-show="section > 2")
+			.sidebar(v-if="section > 2")
 				.sidebar-header Inspection Details
 				.sidebar-container
 					.sidebar-pair(v-if="section > 1")
@@ -199,10 +230,10 @@ html
 					.sidebar-section-content(v-if="section > 3")
 						.sidebar-pair
 							.sidebar-key Calendar Date
-							.sidebar-value {{ appointment.date }}
+							.sidebar-value {{ formatDate(appointment.date) }}
 						.sidebar-pair
 							.sidebar-key Time Slot
-							.sidebar-value {{ appointment.time }}
+							.sidebar-value {{ formatTime(appointment.time) }}
 						.sidebar-pair
 							.sidebar-key Inspector
 							.sidebar-value {{ appointment.inspector }}
@@ -247,10 +278,10 @@ html
 							.sidebar-value {{ realtor.email }}
 						.sidebar-pair
 							.sidebar-key Primary Phone Number
-							.sidebar-value {{ realtor.primaryPhone }} {{ realtor.primaryPhoneType }}
+							.sidebar-value {{ realtor.primaryPhone }} ({{ realtor.primaryPhoneType }})
 						.sidebar-pair(v-if="realtor.secondaryPhone")
 							.sidebar-key Secondary Phone Number
-							.sidebar-value {{ realtor.secondaryPhone }} {{ realtor.secondaryPhoneType }}
+							.sidebar-value {{ realtor.secondaryPhone }} ({{ realtor.secondaryPhoneType }})
 						.sidebar-pair(v-if="realtorFullAddress")
 							.sidebar-key Address
 							.sidebar-value {{ realtorFullAddress }}
@@ -287,12 +318,12 @@ html
 			el: "#app",
 			data: {
 				mapAccessToken: "pk.eyJ1IjoiaW5zcGVjdHdhcmUiLCJhIjoiY2p5dDBkZjJ1MDByZzNvbWZmMDV4NnI2MiJ9.HYKSg6GlZrG7xz15KxwaIQ",
-				section: 5,
+				section: 3,
 				sections: [
 					"Inspection Scheduler",
 					"Services",
 					"Property Information",
-					"Choose an Appointment",
+					"Choose an Appointment Date/Time",
 					"Client Information",
 					"Realtor Information"
 				],
@@ -347,6 +378,48 @@ html
 					time: "",
 					inspector: ""
 				},
+				calTimeSlots: {
+					20190812: [
+						{
+							time: 1030,
+							inspector: "John Doe",
+							available: false
+						},
+						{
+							time: 1230,
+							inspector: "Jack Doe",
+							available: true
+						}
+					],
+					20190822: [
+						{
+							time: 1030,
+							inspector: "John Doe",
+							available: true
+						},
+						{
+							time: 1230,
+							inspector: "Jack Doe",
+							available: false
+						}
+					]
+				},
+				calMonthNames: [
+					"January",
+					"February",
+					"March",
+					"April",
+					"May",
+					"June",
+					"July",
+					"August",
+					"September",
+					"October",
+					"November",
+					"December"
+				],
+				calYear: 1970,
+				calMonth: 0,
 				usingClient: true,
 				client1: {
 					firstName: "",
@@ -651,6 +724,105 @@ html
 						req.open("GET", url);
 						req.send();
 					}, 100);
+				},
+				calGetDayDate: function(row, col) {
+					return this.calDays[((row - 1) * 7) + (col - 1)].date;
+				},
+				calGetDay: function(row, col) {
+					return this.calDays[((row - 1) * 7) + (col - 1)].day;
+				},
+				calGetWeekday: function(col) {
+					switch(col) {
+						case 1: return "Sunday";
+						case 2: return "Monday";
+						case 3: return "Tuesday";
+						case 4: return "Wednesday";
+						case 5: return "Thursday";
+						case 6: return "Friday";
+						case 7: return "Saturday";
+						default: return "UNKNOWN";
+					}
+				},
+				calIsToday: function(row, col) {
+					return this.calDays[((row - 1) * 7) + (col - 1)].today;
+				},
+				calIsThisMonth: function(row, col) {
+					return this.calDays[((row - 1) * 7) + (col - 1)].thisMonth;
+				},
+				calIsInPast: function(row, col) {
+					return this.calDays[((row - 1) * 7) + (col - 1)].past;
+				},
+				calFutureMonthName: function(skip) {
+					let newDate = new Date();
+					newDate.setMonth(newDate.getMonth() + skip);
+					return this.calMonthNames[newDate.getMonth()];
+				},
+				calSetMonth: function(skip) {
+					let newDate = new Date();
+					newDate.setMonth(newDate.getMonth() + skip);
+					this.calMonth = newDate.getMonth();
+					this.calYear = newDate.getFullYear();
+				},
+				calTimeSlotsForDay: function(row, col) {
+					let dayRaw = ((row - 1) * 7) + (col - 1);
+					let day = this.calDays[dayRaw];
+					let date;
+
+					if (day.thisMonth) {
+						date = `${this.calYear}${((this.calMonth + 1) + '').padStart(2, '0')}${(day.day + '').padStart(2, '0')}`;
+					} else {
+						let otherMonth = this.calMonth;
+
+						if (dayRaw < 7) {
+							otherMonth--;
+						} else {
+							otherMonth++;
+						}
+
+						let otherDate = new Date(this.calYear, otherMonth, parseInt(day.day));
+						date = `${otherDate.getFullYear()}${((otherDate.getMonth() + 1) + '').padStart(2, '0')}${(otherDate.getDate() + '').padStart(2, '0')}`;
+					}
+					
+					if (this.calTimeSlots.hasOwnProperty(date)) {
+						return this.calTimeSlots[date];
+					} else {
+						return [];
+					}
+				},
+				chooseAppointment: function(timeslot, date) {
+					if (!timeslot.available) {
+						return;
+					}
+
+					console.log(timeslot);
+
+					this.$Modal.confirm({
+						title: "Confirm Appointment Details",
+						content: `<p>You chose an appointment with the following details:</p><br><p>Date: <code>${this.formatDate(date.valueOf())}</code></p><p>Time: <code>${this.formatTime(timeslot.time)}</code></p><p>Inspector: <code>${timeslot.inspector}</code></p>`,
+						okText: "Confirm Appointment",
+						cancelText: "Cancel",
+						onOk: () => {
+							this.appointment.date = date.valueOf();
+							this.appointment.time = timeslot.time;
+							this.appointment.inspector = timeslot.inspector;
+							this.nextSection();
+						}
+					});
+				},
+				formatTime: function(time) {
+					let hour = Math.floor(time / 100);
+
+					if (hour > 12) {
+						hour -= 12;
+					}
+
+					let minute = time % 100;
+					let period = hour < 12 ? "AM" : "PM"
+
+					return `${("" + hour).padStart(2, '0')}:${("" + minute).padStart(2, '0')} ${period}`;
+				},
+				formatDate: function(date) {
+					return new Date(date).toDateString();
 				}
 			},
 			computed: {
@@ -697,9 +869,79 @@ html
 
 					chosenServices += "</ul>";
 					return chosenServices;
+				},
+				calMonthDays: function() {
+					return [
+						31,
+						(this.calYear % 4 === 0) ? 29 : 28,
+						31,
+						30,
+						31,
+						30,
+						31,
+						31,
+						30,
+						31,
+						30,
+						31
+					];
+				},
+				calMonthName: function() {
+					return this.calMonthNames[this.calMonth];
+				},
+				calDays: function() {
+					let date = new Date();
+					date.setMonth(this.calMonth);
+					date.setFullYear(this.calYear);
+					let startDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+
+					let days = [];
+
+					for (let i = 0; i < 42; i++) {
+						let day, thisMonth, monthDelta, past;
+						let today = false;
+
+						if (i < startDay) {
+							day = this.calMonthDays[this.calMonth === 0 ? 11 : this.calMonth - 1] - startDay + 1 + i;
+							thisMonth = false;
+							monthDelta = -1;
+							past = true;
+						} else if(i >= (this.calMonthDays[this.calMonth] + startDay)) {
+							day = i - (this.calMonthDays[this.calMonth] + startDay) + 1;
+							thisMonth = false;
+							monthDelta = 1;
+							past = false;
+						} else {
+							day = i - startDay + 1;
+
+							let currentDate = new Date();
+							if (this.calYear === currentDate.getFullYear() && this.calMonth === currentDate.getMonth() && day === currentDate.getDate()) {
+								today = true;
+							}
+
+							past = (new Date(this.calYear, this.calMonth, day + 1) < new Date());
+							thisMonth = true;
+							monthDelta = 0;
+						}
+
+						days[i] = {
+							date: new Date(this.calYear, this.calMonth + monthDelta, day),
+							day: (day + '').padStart(2, '0'),
+							thisMonth,
+							today,
+							past
+						};
+					}
+
+					return days;
 				}
 			},
 			mounted: function() {
 				mapboxgl.accessToken = this.mapAccessToken;
+			},
+			created: function() {
+				let date = new Date();
+				this.calYear = date.getFullYear();
+				this.calMonth = date.getMonth();
 			}
 		});

@@ -20,6 +20,25 @@ $text-4xl: 2.25rem;
 $text-5xl: 3rem;
 $text-6xl: 4rem;
 
+$breakpoints: (
+	xs: 576px,
+	sm: 768px,
+	md: 992px,
+	lg: 1200px
+);
+
+@mixin respond-above($breakpoint) {
+	@media (min-width: map-get($breakpoints, $breakpoint)) {
+		@content;
+	}
+}
+
+@mixin respond-below($breakpoint) {
+	@media (max-width: map-get($breakpoints, $breakpoint) - 1) {
+		@content;
+	}
+}
+
 html {
 	font-size: 12px;
 }
@@ -155,6 +174,187 @@ body {
 				font-size: $text-sm;
 				font-style: italic;
 				padding-left: 2.5px;
+			}
+		}
+
+		.appointment-details {
+			.calendar {
+				.calendar-header {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					margin-bottom: 10px;
+		
+					.calendar-month {
+						font-weight: 700;
+						font-size: $text-2xl;
+						border-radius: 5px;
+						padding: 2.5px 10px;
+					}
+				}
+		
+				.calendar-body {
+					.calendar-table {
+						width: 100%;
+						table-layout: fixed;
+						font-size: $text-base;
+		
+						th {
+							padding: 5px 0px 5px 10px;
+							text-align: left;
+							font-weight: 600;
+							color: $grey-4;
+						}
+		
+						td {
+							vertical-align: top;
+							height: 200px;
+		
+							.date {
+								display: flex;
+								flex-direction: column;
+								border-top: 3px solid $grey-2;
+								padding: 5px;
+								margin-left: 5px;
+								margin-right: 5px;
+								height: 100%;
+								transition: all 100ms ease-in-out;
+								overflow-y: hidden;
+		
+								&:hover {
+									background-color: rgba(#BEE3F8, 0.25);
+		
+									.date-header {
+										.date-weekday {
+											opacity: 1;
+										}
+									}
+		
+									.date-timeslots {
+										color: inherit !important;
+									}
+								}
+		
+								&.date-today {
+									font-weight: bold;
+									background-color: rgba(#BEE3F8, 0.25);
+								}
+		
+								&.date-inactive {
+									.date-header, .date-timeslots {
+										color: $grey-3;
+									}
+								}
+		
+								&:not(.date-inactive) .date-header {
+									color: $grey-4;
+								}
+		
+								.date-header {
+									margin-bottom: 2.5px;
+									white-space: nowrap;
+									word-wrap: none;
+									line-break: strict;
+									overflow-wrap: unset;
+
+									.date-number {
+										padding-right: 2.5px;
+									}
+		
+									.date-weekday {
+										opacity: 0;
+										text-transform: uppercase;
+										font-size: $text-sm;
+									}
+								}
+		
+								.date-timeslots {
+									flex-grow: 1;
+									overflow-y: auto;
+									transition: color 100ms ease-in-out;
+		
+									.date-timeslot {
+										padding: 5px;
+										margin-top: 5px;
+										border-radius: 6px;
+										transition: border-left 100ms ease-in-out;
+										cursor: pointer;
+
+										&.date-timeslot-unavailable {
+											border: 2px solid $grey-3;
+											background-color: $grey-2;
+											cursor: not-allowed;
+										}
+
+										&:not(.date-timeslot-unavailable) {
+											border: 2px dashed $grey-3;
+
+											&:hover {
+												border: 2px solid $grey-3;
+											}
+										}
+										
+										div {
+											white-space: nowrap;
+											overflow-x: hidden;
+											text-overflow: ellipsis;
+										}
+
+										.date-timeslot-indicator {
+											float: right;
+										}
+										
+										.date-timeslot-time {
+											font-weight: bold;
+											margin-bottom: 5px;
+										}
+
+										.date-timeslot-inspector {
+											font-style: italic;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+		
+				@include respond-below(sm) {
+					.calendar-header {
+						flex-direction: column;
+						justify-content: center;
+		
+						.calendar-month {
+							margin-bottom: 10px;
+							font-size: $text-2xl;
+						}
+					}
+		
+					.calendar-body {
+						display: block;
+						overflow-y: scroll;
+		
+						.calendar-table {
+							thead {
+								display: none;
+							}
+		
+							tr {
+								display: flex;
+								flex-direction: column;
+							}
+		
+							td {
+								height: auto;
+								min-height: 50px;
+							}
+		
+							.date-weekday {
+								opacity: 1 !important;
+							}
+						}
+					}
+				}
 			}
 		}
 	}
