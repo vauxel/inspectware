@@ -523,7 +523,14 @@ html
 							}
 						});
 					} else if (this.section === 3) { // Appointment Information
-						passed = true;
+						if (this.appointment.date && this.appointment.time && this.appointment.inspector) {
+							passed = true;
+						} else {
+							this.$Modal.warning({
+								title: "No Appointment Chosen",
+								content: "Please select an available appointment timeslot to continue.",
+							});
+						}
 					} else if (this.section === 4) { // Client Information
 						if (this.usingClient) {
 							let client1Valid = false;
