@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { Auth } from "../classes/auth";
+import Auth from "../classes/auth";
 import { checkAuthorization } from "./checks";
 
 const AuthRouter = Router();

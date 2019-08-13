@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { verify } from "jsonwebtoken";
-import { Auth } from "../classes/auth";
+import Auth from "../classes/auth";
 
 export function checkAuthorization(req: Request, res: Response, next: any) {
     if (req.headers.authorization != undefined) {

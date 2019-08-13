@@ -14,9 +14,28 @@ const RealtorSchema = new Mongoose.Schema({
 		type: String,
 		required: [true, "A password is required"]
 	},
-	name: {
+	phone_primary: {
+		phone_type: String,
+		number: Number
+	},
+	phone_secondary: {
+		phone_type: String,
+		number: Number
+	},
+	first_name: {
 		type: String,
-		required: [true, "A name is required"]
+		required: [true, "A first name is required"]
+	},
+	last_name: {
+		type: String,
+		required: [true, "A last name is required"]
+	},
+	affiliation: String,
+	address: {
+		street: String,
+		city: String,
+		state: String,
+		zip: Number
 	},
 	inspections: [{
 		type: String,

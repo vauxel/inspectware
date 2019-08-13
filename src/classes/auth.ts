@@ -3,24 +3,16 @@ import { hashSync, compareSync } from "bcrypt";
 import { randomBytes } from "crypto";
 import ShortId from "shortid";
 import RuntimeException from "./exception";
+import { InvalidParametersException, SanitizationException } from "./exceptions";
 import Account from "../models/account";
 import Inspector from "../models/inspector";
 import Client from "../models/client";
 import Realtor from "../models/realtor";
 
 /**
- * Exception thrown when given parameters are invalid
- */
-export class InvalidParametersException extends RuntimeException {
-	public get getName(): string {
-		return "InvalidParametersException";
-	}
-};
-
-/**
  * Exception thrown when tested login credentials are invalid
  */
-export class InvalidLoginException extends RuntimeException {
+class InvalidLoginException extends RuntimeException {
 	public get getName(): string {
 		return "InvalidLoginException";
 	}
@@ -29,25 +21,16 @@ export class InvalidLoginException extends RuntimeException {
 /**
  * Exception thrown when registration fails possibly due to a conflict
  */
-export class RegistrationException extends RuntimeException {
+class RegistrationException extends RuntimeException {
 	public get getName(): string {
 		return "RegistrationException";
 	}
 };
 
 /**
- * Exception thrown when the given credentials are unsanitized
- */
-export class SanitizationException extends RuntimeException {
-	public get getName(): string {
-		return "SanitizationException";
-	}
-};
-
-/**
  * Manages user authentication functionalities
  */
-export class Auth {
+export default class Auth {
 	/** Regex used for name sanitization */
 	private static NAME_REGEX: RegExp = /^[a-z\-\.\,\'\~\ ]+$/i;
 	/** Regex used for password sanitization */
@@ -193,7 +176,7 @@ export class Auth {
 			affiliation,
 			user.id,
 			user.get("email"),
-			user.get("firstName") + " " + user.get("lastName"),
+			user.get("first_name") + " " + user.get("last_name"),
 			affiliation === "inspector" ? user.get("account") : undefined
 		));
 
@@ -279,8 +262,8 @@ export class Auth {
 		const newInspector = new Inspector({
 			email: emailAddress,
 			password: hashedPassword,
-			firstName: firstName,
-			lastName: lastName,
+			first_name: firstName,
+			last_name: lastName,
 			phone: phoneNumber.replace(/\D/g, ""),
 			account: newAccount
 		});
@@ -300,7 +283,7 @@ export class Auth {
 				"inspector",
 				newInspector.id,
 				newInspector.get("email"),
-				newInspector.get("firstName") + " " + newInspector.get("lastName"),
+				newInspector.get("first_name") + " " + newInspector.get("last_name"),
 				newAccount.id
 			));
 
@@ -374,8 +357,8 @@ export class Auth {
 		}
 
 		return {
-			firstName: user.get("firstName"),
-			lastName: user.get("lastName"),
+			firstName: user.get("first_name"),
+			lastName: user.get("last_name"),
 			email: user.get("email"),
 			phone: user.get("phone"),
 			account: user.get("account")

@@ -6,7 +6,7 @@ import sassMiddleware from "node-sass-middleware";
 import cors from "cors";
 const port = 4040;
 
-import { Auth } from "./classes/auth";
+import Auth from "./classes/auth";
 
 Auth.generateSecret();
 

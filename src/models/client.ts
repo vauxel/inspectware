@@ -14,9 +14,23 @@ const ClientSchema = new Mongoose.Schema({
 		type: String,
 		required: [true, "A password is required"]
 	},
-	name: {
+	phone: {
+		type: Number,
+		required: [true, "A phone number is required"]
+	},
+	first_name: {
 		type: String,
-		required: [true, "A name is required"]
+		required: [true, "A first name is required"]
+	},
+	last_name: {
+		type: String,
+		required: [true, "A last name is required"]
+	},
+	address: {
+		street: String,
+		city: String,
+		state: String,
+		zip: Number
 	},
 	inspections: {
 		type: String,

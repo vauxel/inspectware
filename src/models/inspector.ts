@@ -14,11 +14,11 @@ const InspectorSchema = new Mongoose.Schema({
 		type: String,
 		required: [true, "A password is required"]
 	},
-	firstName: {
+	first_name: {
 		type: String,
 		required: [true, "A first name is required"]
 	},
-	lastName: {
+	last_name: {
 		type: String,
 		required: [true, "A last name is required"]
 	},

@@ -18,7 +18,7 @@ const AccountSchema = new Mongoose.Schema({
 		type: String,
 		ref: "Inspector"
 	},
-    inspectors: [{
+	inspectors: [{
 		type: String,
 		ref: "Inspector"
 	}],
@@ -34,10 +34,21 @@ const AccountSchema = new Mongoose.Schema({
 		type: String,
 		ref: "Inspection"
 	}],
-	inspectionCounter: {
+	inspection_counter: {
 		type: Number,
 		default: 0
-	}
+	},
+	services: [{
+		short_name: String,
+		full_name: String,
+		pricing_type: String,
+		base_price: Number,
+		ranges: [{
+			step: Number,
+			price: Number
+		}],
+		multiplier: Number
+	}]
 });
 
 export default Mongoose.model("Account", AccountSchema);
