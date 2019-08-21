@@ -23,7 +23,11 @@ IndexRouter.get("/scheduler/:id", async (req: Request, res: Response) => {
 			message: "An account by that id does not exist"
 		});
 	} else {
-		res.render("scheduler", { accountId: req.params.id, accountName: account.get("name") });
+		res.render("scheduler", {
+			accountId: req.params.id,
+			accountName: account.get("name"),
+			apiURL: req.protocol + "://" + req.get("host")
+		});
 	}
 });
 

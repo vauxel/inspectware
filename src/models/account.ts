@@ -38,17 +38,109 @@ const AccountSchema = new Mongoose.Schema({
 		type: Number,
 		default: 0
 	},
-	services: [{
-		short_name: String,
-		full_name: String,
-		pricing_type: String,
-		base_price: Number,
-		ranges: [{
-			step: Number,
+	tax: {
+		type: Number,
+		default: 0.0
+	},
+	age_pricing: {
+		enabled: {
+			type: Boolean,
+			default: true
+		},
+		pricing_type: {
+			type: String,
+			default: "tiered"
+		},
+		ranges: {
+			type: [{
+				floor: Number,
+				price: Number
+			}],
+			default: [
+				{
+					floor: 10,
+					price: 25
+				},
+				{
+					floor: 20,
+					price: 50
+				},
+				{
+					floor: 30,
+					price: 75
+				}
+			]
+		},
+		multiplier: {
+			type: Number,
+			default: 1
+		}
+	},
+	sqft_pricing: {
+		enabled: {
+			type: Boolean,
+			default: true
+		},
+		pricing_type: {
+			type: String,
+			default: "tiered"
+		},
+		ranges: {
+			type: [{
+				floor: Number,
+				price: Number
+			}],
+			default: [
+				{
+					floor: 1000,
+					price: 50
+				},
+				{
+					floor: 2000,
+					price: 100
+				},
+				{
+					floor: 3000,
+					price: 150
+				}
+			]
+		},
+		multiplier: {
+			type: Number,
+			default: 1
+		}
+	},
+	foundation_pricing: {
+		type: {
+			basement: Number,
+			slab: Number,
+			crawlspace: Number
+		},
+		default: {
+			basement: 0,
+			slab: 0,
+			crawlspace: 0
+		}
+	},
+	services: {
+		type: [{
+			short_name: String,
+			long_name: String,
 			price: Number
 		}],
-		multiplier: Number
-	}]
+		default: [
+			{
+				short_name: "full",
+				full_name: "Full Home Inspection",
+				price: 400
+			},
+			{
+				short_name: "pre",
+				full_name: "Pre-Drywall Inspection",
+				price: 200
+			}
+		]
+	}
 });
 
 export default Mongoose.model("Account", AccountSchema);

@@ -25,8 +25,8 @@ html
 						i-button(type="primary" @click="nextSection") Proceed to Scheduling
 					.section-content-inner.inner-centered.services(v-if="section === 1")
 						ul.services-list
-							li(v-for="(service, id) in services" v-key="service")
-								Checkbox(v-model="services[id].value") {{ service.name }}
+							li(v-for="(service, index) in services" v-key="service")
+								Checkbox(v-model="services[index].chosen") {{ service.long }}
 					.section-content-inner.property-details(v-if="section === 2")
 						.property-details-form
 							i-form(ref="propertyForm" :model="property" :rules="propertyRules" label-position="left" :label-width="120")
@@ -304,30 +304,26 @@ html
 							.sidebar-value {{ realtorFullAddress }}
 				.sidebar-invoice(v-if="section > 2")
 					.sidebar-invoice-title Inspection Invoice
-					.sidebar-invoice-item
-						.sidebar-key Full Inspection
-						.sidebar-value $400.00
-					.sidebar-invoice-item
-						.sidebar-key Radon Inspection
-						.sidebar-value $25.00
-					.sidebar-invoice-item
-						.sidebar-key Termite Inspection
-						.sidebar-value $50.00
+					.sidebar-invoice-item(v-for="item in invoice.items" :key="item")
+						.sidebar-key {{ item.name }}
+						.sidebar-value ${{ item.price }}
 					hr
 					.sidebar-invoice-item.sidebar-invoice-item-totals
 						.sidebar-key Subtotal
-						.sidebar-value $475.00
+						.sidebar-value ${{ invoice.subtotal }}
 					.sidebar-invoice-item.sidebar-invoice-item-totals
 						.sidebar-key Taxes
-						.sidebar-value $10.00
+						.sidebar-value ${{ invoice.tax }} ({{ invoice.taxPercent }}%)
 					hr
 					.sidebar-invoice-item.sidebar-invoice-item-totals.sidebar-invoice-item-final
 						.sidebar-key Total Amount
-						.sidebar-value $485.00
+						.sidebar-value ${{ invoice.total }}
 
 	script.
 		const accountId = "#{accountId}";
 		const accountName = "#{accountName}";
+		const apiURL = "#{apiURL}";
+
 		iview.lang("en-US");
 		Vue.directive("mask", VueMask.VueMaskDirective);
 
@@ -348,24 +344,7 @@ html
 				],
 				id: accountId,
 				account: accountName,
-				services: {
-					"full_home": {
-						name: "Full Home Inspection",
-						value: false
-					},
-					"pre_insul": {
-						name: "Pre-Insulation Inspection",
-						value: false,
-					},
-					"radon": {
-						name: "Radon Services",
-						value: false,
-					},
-					"termite": {
-						name: "Termite Inspection",
-						value: false,
-					}
-				},
+				services: [],
 				property: {
 					address1: "",
 					address2: "",
@@ -494,6 +473,13 @@ html
 					primaryPhone: [{ required: true, message: "The primary phone number cannot be blank", trigger: "blur" }],
 					primaryPhoneType: [{ required: true, message: "The primary phone number type cannot be blank", trigger: "change" }]
 				},
+				invoice: {
+					items: [],
+					subtotal: 0,
+					tax: 0,
+					taxPercent: 0,
+					total: 0
+				}
 			},
 			methods: {
 				prevSection: function() {
@@ -508,8 +494,8 @@ html
 					if (this.section === 1) { // Services
 						let foundTrue = false;
 
-						for (id in this.services) {
-							foundTrue = foundTrue || this.services[id].value;
+						for (let service of this.services) {
+							foundTrue = foundTrue || service.chosen;
 						}
 
 						if (!foundTrue) {
@@ -539,6 +525,7 @@ html
 								});
 							} else {
 								passed = true;
+								this.getInvoicePricing();
 							}
 						});
 					} else if (this.section === 3) { // Appointment Information
@@ -598,6 +585,20 @@ html
 					if (passed) {
 						this.nextSection();
 					}
+				},
+				getServices: function() {
+					let req = new XMLHttpRequest();
+					let self = this;
+
+					req.addEventListener("load", function() {
+						let data = JSON.parse(this.responseText).data;
+						self.services = data.services;
+					});
+
+					const url = `${apiURL}/api/scheduling/get_services?account=${accountId}`;
+
+					req.open("GET", url);
+					req.send();
 				},
 				matchPropertyAddress: function(value) {
 					let req = new XMLHttpRequest();
@@ -820,8 +821,6 @@ html
 						return;
 					}
 
-					console.log(timeslot);
-
 					this.$Modal.confirm({
 						title: "Confirm Appointment Details",
 						content: `<p>You chose an appointment with the following details:</p><br><p>Date: <code>${this.formatDate(date.valueOf())}</code></p><p>Time: <code>${this.formatTime(timeslot.time)}</code></p><p>Inspector: <code>${timeslot.inspector}</code></p>`,
@@ -849,6 +848,34 @@ html
 				},
 				formatDate: function(date) {
 					return new Date(date).toDateString();
+				},
+				getInvoicePricing: function() {
+					let req = new XMLHttpRequest();
+					let self = this;
+
+					req.addEventListener("load", function() {
+						let data = JSON.parse(this.responseText).data;
+						self.invoice.items = data.items;
+						self.invoice.subtotal = data.subtotal;
+						self.invoice.tax = data.tax;
+						self.invoice.taxPercent = data.tax_percent;
+						self.invoice.total = data.total;
+					});
+
+					let chosenServices = [];
+
+					for (let service of this.services) {
+						if (service.chosen) {
+							chosenServices.push(service.short);
+						}
+					}
+
+					chosenServices = chosenServices.join("|");
+
+					const url = `${apiURL}/api/scheduling/get_pricing?account=${accountId}&services=${chosenServices}&sqft=${this.property.sqft}&age=${this.property.age}&foundation=${this.property.type}`;
+
+					req.open("GET", url);
+					req.send();
 				},
 				scheduleInspection: function() {
 					this.nextSection();
@@ -890,9 +917,9 @@ html
 				chosenServicesString: function() {
 					let chosenServices = "<ul style='padding-left: 10px;'>";
 
-					for (id in this.services) {
-						if (this.services[id].value) {
-							chosenServices += "<li>" + this.services[id].name + "</li>";
+					for (let service of this.services) {
+						if (service.chosen) {
+							chosenServices += "<li>" + service.long + "</li>";
 						}
 					}
 
@@ -967,6 +994,7 @@ html
 			},
 			mounted: function() {
 				mapboxgl.accessToken = this.mapAccessToken;
+				this.getServices();
 			},
 			created: function() {
 				let date = new Date();

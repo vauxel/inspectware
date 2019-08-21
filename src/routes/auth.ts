@@ -23,6 +23,7 @@ AuthRouter.post("/login", async (req: Request, res: Response) => {
 });
 
 AuthRouter.post("/signup", async (req: Request, res: Response) => {
+	console.log(req.body);
 	try {
 		const data = await Auth.registerAccount(
 			req.body.first_name,
