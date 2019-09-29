@@ -1,9 +1,5 @@
-import RuntimeException from "./exception";
-import { InvalidParametersException, SanitizationException } from "./exceptions";
-import Account from "../models/account";
-import Inspector from "../models/inspector";
-import Client from "../models/client";
-import Realtor from "../models/realtor";
+import { InvalidParameterException, SanitizationException } from "@/classes/exceptions";
+import { Document } from "mongoose";
 
 /**
  * Manages inspection scheduling functionalities
@@ -11,18 +7,11 @@ import Realtor from "../models/realtor";
 export class Scheduler {
 	/**
 	 * Gets the services for the specified account
-	 * @param accountId the account id
+	 * @param account the account document
 	 */
-	public static async getServices(accountId: string) {
-		let account;
-		try {
-			account = await Account.findById(accountId);
-		} catch (e) {
-			throw new RuntimeException("Database error: " + e.message);
-		}
-		
+	public static async getServices(account: Document) {
 		if (!account) {
-			throw new InvalidParametersException("An account by that id does not exist");
+			throw new InvalidParameterException("An account by that id does not exist");
 		}
 
 		let services = [];
@@ -35,6 +24,22 @@ export class Scheduler {
 		}
 
 		return { services };
+	}
+
+	/**
+	 * Gets the appointment availabilities between a date range
+	 * @param account the account document
+	 * @param start the starting timestamp
+	 * @param end the ending timestamp
+	 */
+	public static async getAvailabilities(account: Document, start: number, end: number) {
+		if (start <= 0 || !(new Date(start) instanceof Date)) {
+			throw new InvalidParameterException("Invalid start timestamp");
+		}
+
+		if (end <= 0 || !(new Date(end) instanceof Date)) {
+			throw new InvalidParameterException("Invalid end timestamp");
+		}
 	}
 
 	/**
@@ -57,38 +62,27 @@ export class Scheduler {
 	
 	/**
 	 * Calculates the pricing table for an inspection with the given parameters
-	 * @param accountId the account id
+	 * @param account the account document
 	 * @param services an array of service short names
 	 * @param sqft the square footage of the house
 	 * @param age the age of the house
 	 * @param foundation the foundation type of the house
 	 */
-	public static async calculatePricing(accountId: string, services: string[], sqft: number, age: number, foundation: string) {
-		let account;
-		try {
-			account = await Account.findById(accountId);
-		} catch (e) {
-			throw new RuntimeException("Database error: " + e.message);
-		}
-		
-		if (!account) {
-			throw new InvalidParametersException("An account by that id does not exist");
-		}
-
+	public static async calculatePricing(account: Document, services: string[], sqft: number, age: number, foundation: string) {
 		if (!services || services.length === 0) {
-			throw new InvalidParametersException("Invalid services");
+			throw new InvalidParameterException("Invalid services");
 		}
 
 		if (!sqft) {
-			throw new InvalidParametersException("Invalid square footage");
+			throw new InvalidParameterException("Invalid square footage");
 		}
 
 		if (!age) {
-			throw new InvalidParametersException("Invalid house age");
+			throw new InvalidParameterException("Invalid house age");
 		}
 
 		if (!foundation || (foundation !== "basement" && foundation !== "slab" && foundation !== "crawlspace")) {
-			throw new InvalidParametersException("Invalid foundation type");
+			throw new InvalidParameterException("Invalid foundation type");
 		}
 
 		let invoiceItems = [];
@@ -99,7 +93,7 @@ export class Scheduler {
 			let service = accountServices.find((service: {short_name: string}) => service.short_name === serviceName);
 
 			if (!service) {
-				throw new InvalidParametersException("Invalid service name: " + serviceName);
+				throw new InvalidParameterException("Invalid service name: " + serviceName);
 			}
 
 			invoiceItems.push({ name: service.long_name, price: service.price });

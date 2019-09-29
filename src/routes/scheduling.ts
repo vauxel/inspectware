@@ -1,9 +1,9 @@
 import { Router, Request, Response } from "express";
-import { Scheduler } from "../classes/scheduling";
+import { Scheduler } from "@/classes/scheduling";
 
 const SchedulingRouter = Router();
 
-SchedulingRouter.get("/get_services", async (req: Request, res: Response) => {
+SchedulingRouter.get("/services", async (req: Request, res: Response) => {
 	try {
 		const data = await Scheduler.getServices(req.query.account);
 
@@ -21,7 +21,7 @@ SchedulingRouter.get("/get_services", async (req: Request, res: Response) => {
 	}
 });
 
-SchedulingRouter.get("/get_pricing", async (req: Request, res: Response) => {
+SchedulingRouter.get("/pricing", async (req: Request, res: Response) => {
 	try {
 		const data = await Scheduler.calculatePricing(
 			req.query.account,

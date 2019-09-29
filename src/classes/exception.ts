@@ -42,6 +42,14 @@ export default class RuntimeException extends Error {
 	}
 
 	/**
+	 * Gets the HTTP status code associated with the error
+	 * @returns the exception's HTTP status code
+	 */
+	public get getHTTPStatus(): number {
+		return 500;
+	}
+
+	/**
 	 * Gets the stringification of the exception in the
 	 * format: "name: message"
 	 */

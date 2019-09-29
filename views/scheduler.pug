@@ -331,7 +331,7 @@ html
 			el: "#app",
 			data: {
 				mapAccessToken: "pk.eyJ1IjoiaW5zcGVjdHdhcmUiLCJhIjoiY2p5dDBkZjJ1MDByZzNvbWZmMDV4NnI2MiJ9.HYKSg6GlZrG7xz15KxwaIQ",
-				section: 0,
+				section: 3,
 				sections: [
 					"Inspection Scheduler",
 					"Services",
@@ -376,32 +376,7 @@ html
 					time: "",
 					inspector: ""
 				},
-				calTimeSlots: {
-					20190812: [
-						{
-							time: 1030,
-							inspector: "John Doe",
-							available: false
-						},
-						{
-							time: 1230,
-							inspector: "Jack Doe",
-							available: true
-						}
-					],
-					20190822: [
-						{
-							time: 1030,
-							inspector: "John Doe",
-							available: true
-						},
-						{
-							time: 1230,
-							inspector: "Jack Doe",
-							available: false
-						}
-					]
-				},
+				calTimeSlots: {},
 				calMonthNames: [
 					"January",
 					"February",
@@ -525,6 +500,7 @@ html
 								});
 							} else {
 								passed = true;
+								this.getCalAvailabilities();
 								this.getInvoicePricing();
 							}
 						});
@@ -595,7 +571,7 @@ html
 						self.services = data.services;
 					});
 
-					const url = `${apiURL}/api/scheduling/get_services?account=${accountId}`;
+					const url = `${apiURL}/api/scheduling/services?account=${accountId}`;
 
 					req.open("GET", url);
 					req.send();
@@ -817,7 +793,7 @@ html
 					}
 				},
 				chooseAppointment: function(timeslot, date) {
-					if (!timeslot.available) {
+					if (!timeslot.available || date < new Date()) {
 						return;
 					}
 
@@ -836,18 +812,45 @@ html
 				},
 				formatTime: function(time) {
 					let hour = Math.floor(time / 100);
+					let minute = time % 100;
+					let period;
 
 					if (hour > 12) {
 						hour -= 12;
+						period = "PM";
+					} else {
+						period = "AM";
 					}
-
-					let minute = time % 100;
-					let period = hour < 12 ? "AM" : "PM"
 
 					return `${("" + hour).padStart(2, '0')}:${("" + minute).padStart(2, '0')} ${period}`;
 				},
 				formatDate: function(date) {
 					return new Date(date).toDateString();
+				},
+				getCalAvailabilities: function() {
+					let req = new XMLHttpRequest();
+					let self = this;
+
+					req.addEventListener("load", function() {
+						let data = JSON.parse(this.responseText).data;
+						self.calTimeSlots = data;
+
+						for (let date of data.dates) {
+							self.calTimeSlots[date.stamp] = date.slots;
+						}
+					});
+
+					let startDate = new Date();
+					startDate.setMonth(startDate.getMonth() + 0);
+					startDate = startDate.valueOf();
+					let endDate = new Date();
+					endDate.setMonth(endDate.getMonth() + 2);
+					endDate = endDate.valueOf();
+
+					const url = `${apiURL}/api/scheduling/availabilities?account=${accountId}&start=${startDate}&end=${endDate}`;
+
+					req.open("GET", url);
+					req.send();
 				},
 				getInvoicePricing: function() {
 					let req = new XMLHttpRequest();
@@ -872,7 +875,7 @@ html
 
 					chosenServices = chosenServices.join("|");
 
-					const url = `${apiURL}/api/scheduling/get_pricing?account=${accountId}&services=${chosenServices}&sqft=${this.property.sqft}&age=${this.property.age}&foundation=${this.property.type}`;
+					const url = `${apiURL}/api/scheduling/pricing?account=${accountId}&services=${chosenServices}&sqft=${this.property.sqft}&age=${this.property.age}&foundation=${this.property.type}`;
 
 					req.open("GET", url);
 					req.send();

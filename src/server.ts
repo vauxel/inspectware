@@ -10,9 +10,10 @@ import Auth from "./classes/auth";
 
 Auth.generateSecret();
 
-import indexRouter from "./routes/index";
-import authRouter from "./routes/auth";
-import schedulingRouter from "./routes/scheduling";
+import indexRouter from "@/routes/index";
+import authRouter from "@/routes/auth";
+import schedulingRouter from "@/routes/scheduling";
+import preferencesRouter from "@/routes/preferences";
 
 mongoose.connect("mongodb://localhost:27017/inspectware", {useNewUrlParser: true});
 
@@ -31,6 +32,7 @@ server.use(express.static(join(__dirname, "../public")));
 server.use("/", indexRouter);
 server.use("/api/auth", authRouter);
 server.use("/api/scheduling", schedulingRouter);
+server.use("/api/prefs", preferencesRouter);
 
 const dashboard = express();
 dashboard.use(express.static(join(__dirname, "../dashboard/dist")));

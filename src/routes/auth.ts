@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
-import Auth from "../classes/auth";
-import { checkAuthorization } from "./checks";
+import Auth from "@/classes/auth";
+import Util from "@/classes/util";
+import { restrictAuthorization } from "@/routes/restrictions";
 
 const AuthRouter = Router();
 
@@ -9,16 +10,11 @@ AuthRouter.post("/login", async (req: Request, res: Response) => {
 		const data = await Auth.loginUser(req.body.affiliation, req.body.loginName, req.body.password);
 
 		res.json({
-			success: true,
+			status: 200,
 			data
 		});
 	} catch (e) {
-		res.json({
-			success: false,
-			error: {
-				message: e.getMessage
-			}
-		});
+		Util.handleError(e, res);
 	}
 });
 
@@ -35,20 +31,15 @@ AuthRouter.post("/signup", async (req: Request, res: Response) => {
 		);
 
 		res.json({
-			success: true,
+			status: 200,
 			data
 		});
 	} catch (e) {
-		res.json({
-			success: false,
-			error: {
-				message: e.getMessage
-			}
-		});
+		Util.handleError(e, res);
 	}
 });
 
-AuthRouter.post("/update_pass", checkAuthorization, async (req: Request, res: Response) => {
+AuthRouter.post("/update_pass", restrictAuthorization, async (req: Request, res: Response) => {
 	try {
 		await Auth.updatePassword(res.locals.auth.affiliation, res.locals.auth.id, req.body.current, req.body.new);
 
@@ -65,7 +56,7 @@ AuthRouter.post("/update_pass", checkAuthorization, async (req: Request, res: Re
 	}
 });
 
-AuthRouter.get("/user_info", checkAuthorization, async (req: Request, res: Response) => {
+AuthRouter.get("/user_info", restrictAuthorization, async (req: Request, res: Response) => {
 	try {
 		const data = await Auth.getUserInfo(res.locals.auth.affiliation, res.locals.auth.id);
 

@@ -81,7 +81,7 @@ function submitSignupForm() {
 			contentType: "application/json; charset=utf-8",
 			dataType: "json",
 			success: (response) => {
-				if (!response.success) {
+				if (response.status != 200) {
 					$("#signupError").css("display", "block");
 					$("#signupErrorMessage").text(response.error.message);
 				} else {

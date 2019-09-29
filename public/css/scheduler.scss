@@ -228,6 +228,10 @@ body {
 								&.date-inactive {
 									.date-header, .date-timeslots {
 										color: $grey-3;
+
+										.date-timeslot {
+											cursor: not-allowed;
+										}
 									}
 								}
 		

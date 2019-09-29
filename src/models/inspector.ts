@@ -6,29 +6,23 @@ const InspectorSchema = new Mongoose.Schema({
 		type: String,
 		default: ShortId.generate
 	},
-	email: {
-		type: String,
-		required: [true, "A valid email is required"]
-	},
-	password: {
-		type: String,
-		required: [true, "A password is required"]
-	},
-	first_name: {
-		type: String,
-		required: [true, "A first name is required"]
-	},
-	last_name: {
-		type: String,
-		required: [true, "A last name is required"]
-	},
-	phone: {
-		type: Number,
-		required: [true, "A phone number is required"]
-	},
 	account: {
 		type: String,
 		ref: "Account"
+	},
+	email: String,
+	password: String,
+	first_name: String,
+	last_name: String,
+	phone: Number,
+	timeslots: {
+		monday: [Number],
+		tuesday: [Number],
+		wednesday: [Number],
+		thursday: [Number],
+		friday: [Number],
+		saturday: [Number],
+		sunday: [Number]
 	}
 });
 

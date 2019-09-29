@@ -1,6 +1,5 @@
 import { Router, Request, Response } from "express";
-import path from "path";
-import Account from "../models/account";
+import Account from "@/models/account";
 const IndexRouter = Router();
 
 IndexRouter.get("/", (req: Request, res: Response) => {

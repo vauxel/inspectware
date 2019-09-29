@@ -2,12 +2,12 @@ import { sign } from "jsonwebtoken";
 import { hashSync, compareSync } from "bcrypt";
 import { randomBytes } from "crypto";
 import ShortId from "shortid";
-import RuntimeException from "./exception";
-import { InvalidParametersException, SanitizationException } from "./exceptions";
-import Account from "../models/account";
-import Inspector from "../models/inspector";
-import Client from "../models/client";
-import Realtor from "../models/realtor";
+import RuntimeException from "@/classes/exception";
+import { InvalidParameterException, SanitizationException, InvalidOperationException } from "@/classes/exceptions";
+import Account from "@/models/account";
+import Inspector from "@/models/inspector";
+import Client from "@/models/client";
+import Realtor from "@/models/realtor";
 
 /**
  * Exception thrown when tested login credentials are invalid
@@ -16,14 +16,9 @@ class InvalidLoginException extends RuntimeException {
 	public get getName(): string {
 		return "InvalidLoginException";
 	}
-};
 
-/**
- * Exception thrown when registration fails possibly due to a conflict
- */
-class RegistrationException extends RuntimeException {
-	public get getName(): string {
-		return "RegistrationException";
+	public get getHTTPStatus(): number {
+		return 401;
 	}
 };
 
@@ -119,7 +114,7 @@ export default class Auth {
 		} else if (affiliation === "realtor") {
 			return Realtor;
 		} else {
-			throw new InvalidParametersException("Invalid affiliation");
+			throw new InvalidParameterException("Invalid affiliation");
 		}
 	}
 
@@ -248,11 +243,11 @@ export default class Auth {
 		}
 
 		if (accountCount > 0) {
-			throw new RegistrationException("A company by that name has already been registered");
+			throw new InvalidOperationException("A company by that name has already been registered");
 		}
 
 		if (inspectorCount > 0) {
-			throw new RegistrationException("An inspector with that email address already exists");
+			throw new InvalidOperationException("An inspector with that email address already exists");
 		}
 
 		const newAccount = new Account({
@@ -307,7 +302,7 @@ export default class Auth {
 		const model = this.getModelFromAffiliation(affiliation);
 
 		if (!ShortId.isValid(userId)) {
-			throw new InvalidParametersException("Invalid user id");
+			throw new InvalidParameterException("Invalid user id");
 		}
 
 		let user;
@@ -318,15 +313,15 @@ export default class Auth {
 		}
 
 		if (!user) {
-			throw new InvalidParametersException("Invalid user id");
+			throw new InvalidParameterException("Invalid user id");
 		}
 
 		if (!currentPass) {
-			throw new InvalidParametersException("Invalid current password");
+			throw new InvalidParameterException("Invalid current password");
 		}
 
 		if (!this.validatePassword(currentPass, user.get("password"))) {
-			throw new InvalidParametersException("Incorrect current password");
+			throw new InvalidParameterException("Incorrect current password");
 		}
 
 		if (!newPass || !this.PASSWORD_REGEX.test(newPass)) {
@@ -353,7 +348,7 @@ export default class Auth {
 		}
 
 		if (!user) {
-			throw new InvalidParametersException("Invalid user id");
+			throw new InvalidParameterException("Invalid user id");
 		}
 
 		return {
