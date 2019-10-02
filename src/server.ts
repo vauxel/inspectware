@@ -8,7 +8,11 @@ const port = 4040;
 
 import Auth from "./classes/auth";
 
-Auth.generateSecret();
+if (!process.argv.includes("-staticsecret")) {
+	Auth.generateSecret();
+} else {
+	console.log("! Auth using static, debugging secret !");
+}
 
 import indexRouter from "@/routes/index";
 import authRouter from "@/routes/auth";

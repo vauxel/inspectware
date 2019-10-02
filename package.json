@@ -4,10 +4,11 @@
 	"description": "",
 	"main": "src/server.ts",
 	"scripts": {
-		"start": "npm run build && npm run serve",
+		"start": "npm run build && npm run serve:prod",
 		"build": "tsc --project tsconfig.json && tscpaths -p tsconfig.json -s ./src -o ./dist",
-		"serve": "node dist/server.js",
-		"debug": "nodemon -e ts -w ./src -x npm start"
+		"serve:prod": "node dist/server.js",
+		"serve:dev": "node dist/server.js -staticsecret",
+		"debug": "nodemon -e ts -w ./src -x 'npm run build && npm run serve:dev'"
 	},
 	"author": "",
 	"license": "ISC",

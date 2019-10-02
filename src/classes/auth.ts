@@ -36,7 +36,7 @@ export default class Auth {
 	private static PHONE_REGEX: RegExp = /^(\+0?1\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/;
 
 	/** Secret used for generating JWTs */
-	private static secret: string;
+	private static secret: string = "DEBUG_SECRET";
 
 	/**
 	 * Generates and stores a secret used for generating JWTs, but can only be called once per runtime
