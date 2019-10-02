@@ -1,3 +1,4 @@
+import moment from "moment";
 import { Document } from "mongoose";
 import { InvalidParameterException, InvalidOperationException } from "@/classes/exceptions";
 
@@ -95,13 +96,82 @@ export class Availability {
 		}
 
 		let timeslots: number[] = inspector.get("timeslots." + day);
-		let index = timeslots.indexOf(time);
+		let index: number = timeslots.indexOf(time);
 		if (index == -1) {
 			throw new InvalidOperationException("Nonexistent timeslot");
 		}
 
 		timeslots.splice(index, 1);
 		inspector.set("timeslots." + day, timeslots);
+		inspector.save();
+		return true;
+	}
+
+	/**
+	 * Gets the time-off slots for an inspector for the next 30 days
+	 * @param inspector the inspector document
+	 * @returns the inspector's time-off slots over the next 30 days
+	 */
+	public static getTimeoff(inspector: Document): {date: string, time: number}[] {
+		const timeoff: {date: string, time: number}[] = inspector.get("timeoff");
+		return timeoff;
+	}
+
+	/**
+	 * Adds a time-off slot for an inspector
+	 * @param inspector the inspector document
+	 * @param date the date in ISO format (year-month-day)
+	 * @param time the 24hr time
+	 * @returns whether the add operation was successful
+	 */
+	public static addTimeoff(inspector: Document, date: string, time: number): boolean {
+		let dateMoment: moment.Moment = moment(date, "YYYYMMDD");
+
+		if (!dateMoment.isValid()) {
+			throw new InvalidParameterException("Invalid date");
+		}
+
+		if (!(/^([0-9]|0[0-9]|1[0-9]|2[0-3])[0-5][0-9]$/.test("" + time))) {
+			throw new InvalidParameterException("Invalid time");
+		}
+
+		let timeoff: {date: string, time: number}[] = inspector.get("timeoff");
+		if (timeoff.find((timeoff => timeoff.date == date && timeoff.time == time)) != undefined) {
+			throw new InvalidOperationException("Duplicate time-off slot");
+		}
+
+		timeoff.push({ date, time });
+		inspector.set("timeoff", timeoff);
+		inspector.save();
+		return true;
+	}
+
+	/**
+	 * Removes a time-off slot for an inspector
+	 * @param inspector the inspector document
+	 * @param date the date in ISO format (year-month-day)
+	 * @param time the 24hr time
+	 * @returns whether the remove operation was successful
+	 */
+	public static removeTimeoff(inspector: Document, date: string, time: number): boolean {
+		let dateMoment: moment.Moment = moment(date, "YYYYMMDD");
+
+		if (!dateMoment.isValid()) {
+			throw new InvalidParameterException("Invalid date");
+		}
+
+		if (!(/^([0-9]|0[0-9]|1[0-9]|2[0-3])[0-5][0-9]$/.test("" + time))) {
+			throw new InvalidParameterException("Invalid time");
+		}
+
+		let timeoff: {date: string, time: number}[] = inspector.get("timeoff");
+		let index = timeoff.findIndex((timeoff => timeoff.date == date && timeoff.time == time));
+		if (index == -1) {
+			throw new InvalidOperationException("Nonexistent time-off slot");
+		}
+
+		timeoff.splice(index, 1);
+		inspector.set("timeoff", timeoff);
 		inspector.save();
 		return true;
 	}

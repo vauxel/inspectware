@@ -23,7 +23,11 @@ const InspectorSchema = new Mongoose.Schema({
 		friday: [Number],
 		saturday: [Number],
 		sunday: [Number]
-	}
+	},
+	timeoff: [{
+		date: String,
+		time: Number
+	}]
 });
 
 export default Mongoose.model("Inspector", InspectorSchema);
