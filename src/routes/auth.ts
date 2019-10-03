@@ -44,15 +44,10 @@ AuthRouter.post("/update_pass", restrictAuthorization, async (req: Request, res:
 		await Auth.updatePassword(res.locals.auth.affiliation, res.locals.auth.id, req.body.current, req.body.new);
 
 		res.json({
-			success: true
+			status: 200
 		});
 	} catch (e) {
-		res.json({
-			success: false,
-			error: {
-				message: e.getMessage
-			}
-		});
+		Util.handleError(e, res);
 	}
 });
 
@@ -61,16 +56,11 @@ AuthRouter.get("/user_info", restrictAuthorization, async (req: Request, res: Re
 		const data = await Auth.getUserInfo(res.locals.auth.affiliation, res.locals.auth.id);
 
 		res.json({
-			success: true,
+			status: 200,
 			data
 		});
 	} catch (e) {
-		res.json({
-			success: false,
-			error: {
-				message: e.getMessage
-			}
-		});
+		Util.handleError(e, res);
 	}
 });
 

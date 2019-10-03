@@ -221,17 +221,12 @@ body {
 								}
 		
 								&.date-today {
-									font-weight: bold;
 									background-color: rgba(#BEE3F8, 0.25);
 								}
 		
 								&.date-inactive {
 									.date-header, .date-timeslots {
 										color: $grey-3;
-
-										.date-timeslot {
-											cursor: not-allowed;
-										}
 									}
 								}
 		

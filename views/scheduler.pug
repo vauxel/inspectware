@@ -101,10 +101,10 @@ html
 														span.date-number {{ calGetDay(x, y) }}
 														span.date-weekday {{ calGetWeekday(y) }}
 													ul.date-timeslots
-														li.date-timeslot(v-for="timeslot in calTimeSlotsForDay(x, y)" :key="timeslot" :class="{ 'date-timeslot-unavailable': !timeslot.available }" @click="chooseAppointment(timeslot, calGetDayDate(x, y))")
-															.date-timeslot-indicator {{ timeslot.available ? "➕" : "🚫" }}
+														li.date-timeslot(v-for="timeslot in calTimeSlotsForDay(x, y)" :key="timeslot" @click="chooseAppointment(timeslot, calGetDayDate(x, y))")
+															.date-timeslot-indicator ➕
 															.date-timeslot-time {{ formatTime(timeslot.time) }}
-															.date-timeslot-inspector {{ timeslot.inspector }}
+															.date-timeslot-inspector {{ timeslot.inspectorName }}
 					.section-content-inner.client-details(v-if="section === 4")
 						checkbox(size="large" v-model="usingClient" :disabled="!usingRealtor") I have a client I wish to enter
 						.realtor-client-toggle-text Information from either a realtor or a client is needed to schedule an inspection
@@ -505,7 +505,7 @@ html
 							}
 						});
 					} else if (this.section === 3) { // Appointment Information
-						if (this.appointment.date && this.appointment.time && this.appointment.inspector) {
+						if (this.appointment.date && this.appointment.time && this.appointment.inspectorId && this.appointment.inspectorName) {
 							passed = true;
 						} else {
 							this.$Modal.warning({
@@ -568,7 +568,7 @@ html
 
 					req.addEventListener("load", function() {
 						let data = JSON.parse(this.responseText).data;
-						self.services = data.services;
+						self.services = data;
 					});
 
 					const url = `${apiURL}/api/scheduling/services?account=${accountId}`;
@@ -753,7 +753,8 @@ html
 					return this.calDays[((row - 1) * 7) + (col - 1)].thisMonth;
 				},
 				calIsInPast: function(row, col) {
-					return this.calDays[((row - 1) * 7) + (col - 1)].past;
+					let day = this.calDays[((row - 1) * 7) + (col - 1)];
+					return day.past || day.today;
 				},
 				calFutureMonthName: function(skip) {
 					let newDate = new Date();
@@ -783,7 +784,7 @@ html
 						}
 
 						let otherDate = new Date(this.calYear, otherMonth, parseInt(day.day));
-						date = `${otherDate.getFullYear()}${((otherDate.getMonth() + 1) + '').padStart(2, '0')}${(otherDate.getDate() + '').padStart(2, '0')}`;
+						date = `${otherDate.getFullYear()}${((otherDate.getMonth() + 1) + "").padStart(2, "0")}${(otherDate.getDate() + "").padStart(2, "0")}`;
 					}
 					
 					if (this.calTimeSlots.hasOwnProperty(date)) {
@@ -793,19 +794,16 @@ html
 					}
 				},
 				chooseAppointment: function(timeslot, date) {
-					if (!timeslot.available || date < new Date()) {
-						return;
-					}
-
 					this.$Modal.confirm({
 						title: "Confirm Appointment Details",
-						content: `<p>You chose an appointment with the following details:</p><br><p>Date: <code>${this.formatDate(date.valueOf())}</code></p><p>Time: <code>${this.formatTime(timeslot.time)}</code></p><p>Inspector: <code>${timeslot.inspector}</code></p>`,
+						content: `<p>You chose an appointment with the following details:</p><br><p>Date: <code>${this.formatDate(date.valueOf())}</code></p><p>Time: <code>${this.formatTime(timeslot.time)}</code></p><p>Inspector: <code>${timeslot.inspectorName}</code></p>`,
 						okText: "Confirm Appointment",
 						cancelText: "Cancel",
 						onOk: () => {
 							this.appointment.date = date.valueOf();
 							this.appointment.time = timeslot.time;
-							this.appointment.inspector = timeslot.inspector;
+							this.appointment.inspectorId = timeslot.inspectorId;
+							this.appointment.inspectorName = timeslot.inspectorName;
 							this.nextSection();
 						}
 					});
@@ -834,20 +832,16 @@ html
 					req.addEventListener("load", function() {
 						let data = JSON.parse(this.responseText).data;
 						self.calTimeSlots = data;
-
-						for (let date of data.dates) {
-							self.calTimeSlots[date.stamp] = date.slots;
-						}
 					});
 
 					let startDate = new Date();
-					startDate.setMonth(startDate.getMonth() + 0);
-					startDate = startDate.valueOf();
-					let endDate = new Date();
-					endDate.setMonth(endDate.getMonth() + 2);
-					endDate = endDate.valueOf();
+					startDate.setDate(startDate.getDate() + 1);
+					let startDateString = `${startDate.getFullYear()}${((startDate.getMonth() + 1) + "").padStart(2, "0")}${(startDate.getDate() + "").padStart(2, "0")}`;
 
-					const url = `${apiURL}/api/scheduling/availabilities?account=${accountId}&start=${startDate}&end=${endDate}`;
+					let endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 3, 0);
+					let endDateString = `${endDate.getFullYear()}${((endDate.getMonth() + 1) + "").padStart(2, "0")}${(endDate.getDate() + "").padStart(2, "0")}`;
+
+					const url = `${apiURL}/api/scheduling/availabilities?account=${accountId}&from=${startDateString}&until=${endDateString}`;
 
 					req.open("GET", url);
 					req.send();
@@ -998,6 +992,7 @@ html
 			mounted: function() {
 				mapboxgl.accessToken = this.mapAccessToken;
 				this.getServices();
+				this.getCalAvailabilities();
 			},
 			created: function() {
 				let date = new Date();

@@ -1,5 +1,7 @@
 import { InvalidParameterException, SanitizationException } from "@/classes/exceptions";
 import { Document } from "mongoose";
+import moment from "moment";
+import { Availability } from "@/classes/preferences";
 
 /**
  * Manages inspection scheduling functionalities
@@ -8,8 +10,9 @@ export class Scheduler {
 	/**
 	 * Gets the services for the specified account
 	 * @param account the account document
+	 * @returns an object array containing the short and long names of the services
 	 */
-	public static async getServices(account: Document) {
+	public static getServices(account: Document): {short: string, long: string}[] {
 		if (!account) {
 			throw new InvalidParameterException("An account by that id does not exist");
 		}
@@ -23,7 +26,7 @@ export class Scheduler {
 			});
 		}
 
-		return { services };
+		return services;
 	}
 
 	/**
@@ -33,13 +36,56 @@ export class Scheduler {
 	 * @param end the ending timestamp
 	 */
 	public static async getAvailabilities(account: Document, start: number, end: number) {
-		if (start <= 0 || !(new Date(start) instanceof Date)) {
+		let startMoment = moment(start, "YYYYMMDD");
+		let endMoment = moment(end, "YYYYMMDD");
+
+		if (!startMoment.isValid()) {
 			throw new InvalidParameterException("Invalid start timestamp");
 		}
 
-		if (end <= 0 || !(new Date(end) instanceof Date)) {
+		if (!endMoment.isValid()) {
 			throw new InvalidParameterException("Invalid end timestamp");
 		}
+
+		let availabilities: {[k: string]: {time: number, inspectorId: string, inspectorName: string}[]} = {};
+
+		await account.populate("inspectors").execPopulate();
+		let inspectors: any[] = account.get("inspectors");
+
+		let days = endMoment.diff(startMoment, "days") + 1;
+		for (let i = 0; i < days; i++) {
+			let dateMoment = moment(startMoment).add(i, "days");
+			let dateString = dateMoment.format("YYYYMMDD");
+			availabilities[dateString] = [];
+
+			for (let inspector of inspectors) {
+				let inspectorId: string = inspector._id;
+				let inspectorName: string = inspector.first_name + " " + inspector.last_name;
+				let weekday = dateMoment.format("dddd").toLowerCase();
+				let timeoffs = Availability.getTimeoff(inspector);
+
+				for (let timeslot of inspector.timeslots[weekday]) {
+					let blockedoff = false;
+
+					for (let timeoff of timeoffs) {
+						if (timeoff.date == dateString && timeoff.time == timeslot) {
+							blockedoff = true;
+							break;
+						}
+					}
+
+					if (!blockedoff) {
+						availabilities[dateString].push({
+							time: timeslot,
+							inspectorId,
+							inspectorName
+						});
+					}
+				}
+			}
+		}
+
+		return availabilities;
 	}
 
 	/**

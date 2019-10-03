@@ -30,7 +30,7 @@ export function restrictAuthorization(req: Request, res: Response, next: any) {
 export function restrictNonInspectors(this: any, req: Request, res: Response, next: any) {
 	if (res.locals.auth.affiliation != "inspector") {
 		res.status(401);
-		return res.json({ success: false, error: { message: "Unauthorized affiliation (inspector only)" } });
+		return res.json({ status: 401, error: { message: "Unauthorized affiliation (inspector only)" } });
 	} else {
 		next();
 	}
@@ -39,7 +39,7 @@ export function restrictNonInspectors(this: any, req: Request, res: Response, ne
 export function restrictNonRealtors(this: any, req: Request, res: Response, next: any) {
 	if (res.locals.auth.affiliation != "realtor") {
 		res.status(401);
-		return res.json({ success: false, error: { message: "Unauthorized affiliation (realtor only)" } });
+		return res.json({ status: 401, error: { message: "Unauthorized affiliation (realtor only)" } });
 	} else {
 		next();
 	}
@@ -48,7 +48,7 @@ export function restrictNonRealtors(this: any, req: Request, res: Response, next
 export function restrictNonClients(this: any, req: Request, res: Response, next: any) {
 	if (res.locals.auth.affiliation != "client") {
 		res.status(401);
-		return res.json({ success: false, error: { message: "Unauthorized affiliation (client only)" } });
+		return res.json({ status: 401, error: { message: "Unauthorized affiliation (client only)" } });
 	} else {
 		next();
 	}

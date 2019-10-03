@@ -1,30 +1,28 @@
 import { Router, Request, Response } from "express";
 import { Scheduler } from "@/classes/scheduling";
+import Util from "@/classes/util";
 
 const SchedulingRouter = Router();
 
 SchedulingRouter.get("/services", async (req: Request, res: Response) => {
 	try {
-		const data = await Scheduler.getServices(req.query.account);
+		const account = await Util.resolveAccount(req.query.account);
+		const data = await Scheduler.getServices(account);
 
 		res.json({
-			success: true,
+			status: 200,
 			data
 		});
 	} catch (e) {
-		res.json({
-			success: false,
-			error: {
-				message: e.getMessage
-			}
-		});
+		Util.handleError(e, res);
 	}
 });
 
 SchedulingRouter.get("/pricing", async (req: Request, res: Response) => {
 	try {
+		const account = await Util.resolveAccount(req.query.account);
 		const data = await Scheduler.calculatePricing(
-			req.query.account,
+			account,
 			req.query.services ? req.query.services.split("|") : undefined,
 			req.query.sqft,
 			req.query.age,
@@ -32,16 +30,29 @@ SchedulingRouter.get("/pricing", async (req: Request, res: Response) => {
 		);
 
 		res.json({
-			success: true,
+			status: 200,
 			data
 		});
 	} catch (e) {
+		Util.handleError(e, res);
+	}
+});
+
+SchedulingRouter.get("/availabilities", async (req: Request, res: Response) => {
+	try {
+		const account = await Util.resolveAccount(req.query.account);
+		const data = await Scheduler.getAvailabilities(
+			account,
+			req.query.from,
+			req.query.until
+		);
+
 		res.json({
-			success: false,
-			error: {
-				message: e.getMessage
-			}
+			status: 200,
+			data
 		});
+	} catch (e) {
+		Util.handleError(e, res);
 	}
 });
 

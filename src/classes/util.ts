@@ -1,6 +1,6 @@
 import { Response } from "express";
 import RuntimeException from "@/classes/exception";
-import { InvalidParameterException, InvalidOperationException, SanitizationException } from "@/classes/exceptions";
+import { InvalidParameterException } from "@/classes/exceptions";
 import Account from "@/models/account";
 import Inspector from "@/models/inspector";
 import Client from "@/models/client";
@@ -91,10 +91,9 @@ export default class Util {
 	 * @param e the error object
 	 * @param res the express response object
 	 */
-	public static handleError(e: RuntimeException, res: Response) {
-		res.status(e.getHTTPStatus).json({
-			status: e.getHTTPStatus,
-			message: e.getMessage
-		});
+	public static handleError(e: Error, res: Response) {
+		let status = e instanceof RuntimeException ? e.getHTTPStatus : 500;
+		let message = e instanceof RuntimeException ? e.getMessage : e.message;
+		res.status(status).json({ status, message });
 	}
 };
