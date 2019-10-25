@@ -40,7 +40,7 @@ export class Availability {
 	 * Adds a new timeslot availability for an inspector
 	 * @param inspector the inspector document
 	 * @param day the day of the week of the timeslot
-	 * @param time the 24hr time of the timeslot
+	 * @param time the 24hr time of the timeslot in minutes since midnight
 	 * @returns whether the add operation was successful
 	 */
 	public static addTimeslot(inspector: Document, day: string, time: number): boolean {
@@ -56,7 +56,7 @@ export class Availability {
 			throw new InvalidParameterException("Invalid day of the week");
 		}
 
-		if (!(/^([0-9]|0[0-9]|1[0-9]|2[0-3])[0-5][0-9]$/.test("" + time))) {
+		if (time < 0 || time >= 1440 || Math.floor(time) != time) {
 			throw new InvalidParameterException("Invalid time");
 		}
 
@@ -75,7 +75,7 @@ export class Availability {
 	 * Removes a new timeslot availability for an inspector
 	 * @param inspector the inspector document
 	 * @param day the day of the week of the timeslot
-	 * @param time the 24hr time of the timeslot
+	 * @param time the 24hr time of the timeslot in minutes since midnight
 	 * @returns whether the remove operation was successful
 	 */
 	public static removeTimeslot(inspector: Document, day: string, time: number): boolean {
@@ -91,7 +91,7 @@ export class Availability {
 			throw new InvalidParameterException("Invalid day of the week");
 		}
 
-		if (!(/^([0-9]|0[0-9]|1[0-9]|2[0-3])[0-5][0-9]$/.test("" + time))) {
+		if (time < 0 || time >= 1440 || Math.floor(time) != time) {
 			throw new InvalidParameterException("Invalid time");
 		}
 
@@ -121,7 +121,7 @@ export class Availability {
 	 * Adds a time-off slot for an inspector
 	 * @param inspector the inspector document
 	 * @param date the date in ISO format (year-month-day)
-	 * @param time the 24hr time
+	 * @param time the 24hr time in minutes since midnight
 	 * @returns whether the add operation was successful
 	 */
 	public static addTimeoff(inspector: Document, date: string, time: number): boolean {
@@ -131,7 +131,7 @@ export class Availability {
 			throw new InvalidParameterException("Invalid date");
 		}
 
-		if (!(/^([0-9]|0[0-9]|1[0-9]|2[0-3])[0-5][0-9]$/.test("" + time))) {
+		if (time < 0 || time >= 1440 || Math.floor(time) != time) {
 			throw new InvalidParameterException("Invalid time");
 		}
 
@@ -150,7 +150,7 @@ export class Availability {
 	 * Removes a time-off slot for an inspector
 	 * @param inspector the inspector document
 	 * @param date the date in ISO format (year-month-day)
-	 * @param time the 24hr time
+	 * @param time the 24hr time in minutes since midnight
 	 * @returns whether the remove operation was successful
 	 */
 	public static removeTimeoff(inspector: Document, date: string, time: number): boolean {
@@ -160,7 +160,7 @@ export class Availability {
 			throw new InvalidParameterException("Invalid date");
 		}
 
-		if (!(/^([0-9]|0[0-9]|1[0-9]|2[0-3])[0-5][0-9]$/.test("" + time))) {
+		if (time < 0 || time >= 1440 || Math.floor(time) != time) {
 			throw new InvalidParameterException("Invalid time");
 		}
 

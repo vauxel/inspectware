@@ -102,6 +102,14 @@ export default class Auth {
 	}
 
 	/**
+	 * Generates a password of the specified length
+	 * @param length the password length
+	 */
+	public static generatePassword(length: number): string {
+		return this.hashPassword(randomBytes(length).toString("hex"));
+	}
+
+	/**
 	 * Gets a MongoDB model from an affiliation string
 	 * @param affiliation the affiliation (inspector / client / realtor)
 	 * @returns the MongoDB model associated with the affiliation string

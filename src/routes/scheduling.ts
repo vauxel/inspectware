@@ -56,4 +56,26 @@ SchedulingRouter.get("/availabilities", async (req: Request, res: Response) => {
 	}
 });
 
+SchedulingRouter.post("/schedule", async (req: Request, res: Response) => {
+	try {
+		const account = await Util.resolveAccount(req.query.account);
+		const data = await Scheduler.schedule(
+			account,
+			req.body.services,
+			req.body.property,
+			req.body.appointment,
+			req.body.client1,
+			req.body.client2,
+			req.body.realtor
+		);
+
+		res.json({
+			status: 200,
+			data
+		});
+	} catch (e) {
+		Util.handleError(e, res);
+	}
+});
+
 export default SchedulingRouter;

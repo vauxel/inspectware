@@ -6,20 +6,37 @@ const InspectionSchema = new Mongoose.Schema({
 		type: String,
 		default: ShortId.generate
 	},
-	inspectionNumber: Number,
+	inspection_number: Number,
 	scheduled: {
 		type: Date,
 		default: Date.now
 	},
 	date: Date,
-	address: String,
-	client: {
+	property: {
+		address1: String,
+		address2: String,
+		city: String,
+		state: String,
+		zip: Number,
+		sqft: Number,
+		age: Number,
+		foundation: String
+	},
+	client1: {
+		type: String,
+		ref: "Client"
+	},
+	client2: {
 		type: String,
 		ref: "Client"
 	},
 	realtor: {
 		type: String,
 		ref: "Realtor"
+	},
+	inspector: {
+		type: String,
+		ref: "Inspector"
 	},
 	status: {
 		type: String,

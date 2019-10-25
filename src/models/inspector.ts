@@ -27,7 +27,11 @@ const InspectorSchema = new Mongoose.Schema({
 	timeoff: [{
 		date: String,
 		time: Number
-	}]
+	}],
+	inspections: [{
+		type: String,
+		ref: "Inspection"
+	}],
 });
 
 export default Mongoose.model("Inspector", InspectorSchema);

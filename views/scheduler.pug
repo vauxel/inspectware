@@ -66,8 +66,8 @@ html
 									i-input(v-model="property.sqft" placeholder="Enter the whole-number square footage" v-mask="'######'")
 								form-item(label="Age of Home" prop="age")
 									i-input(v-model="property.age" placeholder="Enter the age of the home" v-mask="'###'")
-								form-item(label="Foundation Type" prop="type")
-									i-select(v-model="property.type" placeholder="Choose the foundation type")
+								form-item(label="Foundation Type" prop="foundation")
+									i-select(v-model="property.foundation" placeholder="Choose the foundation type")
 										i-option(value="slab") Slab
 										i-option(value="crawlspace") Crawlspace
 										i-option(value="basement") Basement
@@ -111,7 +111,7 @@ html
 						row(:gutter="20" v-if="usingClient")
 							i-col(span="12")
 								.client-details-title Client One's Information
-								i-form(ref="client1Form" :model="client1" :rules="clientRules" label-position="top")
+								i-form(ref="client1Form" :model="client1" :rules="client1Rules" label-position="top")
 									form-item(label="First Name" prop="firstName")
 										i-input(v-model="client1.firstName" placeholder="Enter the first client's first name")
 									form-item(label="Last Name" prop="lastName")
@@ -120,42 +120,45 @@ html
 										i-input(v-model="client1.email" placeholder="Enter the first client's email address")
 									form-item(label="Phone Number" prop="phone")
 										i-input(v-model="client1.phone" placeholder="Enter the first client's phone number" v-mask="'(###) ###-####'")
-									form-item(label="Current Address" prop="address")
+									form-item(label="Current Address" prop="address" :required="requireClient1Address" :show-message="false")
 										i-input(v-model="client1.address" placeholder="Enter the first client's current address")
-									form-item(label="Current City" prop="city")
+									form-item(label="Current City" prop="city" :required="requireClient1Address" :show-message="false")
 										i-input(v-model="client1.city" placeholder="Enter the first client's current city")
-									form-item(label="Current State" prop="state")
+									form-item(label="Current State" prop="state" :required="requireClient1Address" :show-message="false")
 										i-select(
 											v-model="client1.state"
 											filterable
+											clearable
 											placeholder="Select the first client's current state")
 											i-option(v-for="(long, short) in stateList" :value="short") {{ long }}
-									form-item(label="Current ZIP Code" prop="zip")
+									form-item(label="Current ZIP Code" prop="zip" :required="requireClient1Address" :show-message="false")
 										i-input(v-model="client1.zip" placeholder="Enter the first client's current zip code" v-mask="'#####'")
 							i-col(span="12")
 								.client-details-title Client Two's Information
-									.client-details-subtitle (Optional)
-								i-form(ref="client2Form" :model="client2" label-position="top")
-									form-item(label="First Name" prop="firstName")
-										i-input(v-model="client2.firstName" placeholder="Enter the second client's first name")
-									form-item(label="Last Name" prop="lastName")
-										i-input(v-model="client2.lastName" placeholder="Enter the second client's last name")
+									.client-details-subtitle (Optional) (Email address is required to be filled out)
+								i-form(ref="client2Form" :model="client2" :rules="client2Rules" label-position="top")
+									form-item(label="First Name" prop="firstName" :required="!lockClient2" :show-message="false")
+										i-input(v-model="client2.firstName" placeholder="Enter the second client's first name" :disabled="lockClient2")
+									form-item(label="Last Name" prop="lastName" :required="!lockClient2" :show-message="false")
+										i-input(v-model="client2.lastName" placeholder="Enter the second client's last name" :disabled="lockClient2")
 									form-item(label="Email Address" prop="email")
-										i-input(v-model="client2.email" placeholder="Enter the second client's email address")
-									form-item(label="Phone Number" prop="phone")
-										i-input(v-model="client2.phone" placeholder="Enter the second client's phone number" v-mask="'(###) ###-####'")
-									form-item(label="Current Address" prop="address")
-										i-input(v-model="client2.address" placeholder="Enter the second client's current address")
-									form-item(label="Current City" prop="city")
-										i-input(v-model="client2.city" placeholder="Enter the second client's current city")
-									form-item(label="Current State" prop="state")
+										i-input(v-model="client2.email" placeholder="Enter the second client's email address" @keyup.native="validateClient2")
+									form-item(label="Phone Number" prop="phone" :required="!lockClient2" :show-message="false")
+										i-input(v-model="client2.phone" placeholder="Enter the second client's phone number" v-mask="'(###) ###-####'" :disabled="lockClient2")
+									form-item(label="Current Address" prop="address" :required="requireClient2Address" :show-message="false")
+										i-input(v-model="client2.address" placeholder="Enter the second client's current address" :disabled="lockClient2")
+									form-item(label="Current City" prop="city" :required="requireClient2Address" :show-message="false")
+										i-input(v-model="client2.city" placeholder="Enter the second client's current city" :disabled="lockClient2")
+									form-item(label="Current State" prop="state" :required="requireClient2Address" :show-message="false")
 										i-select(
 											v-model="client2.state"
 											filterable
-											placeholder="Select the second client's current state")
+											clearable
+											placeholder="Select the second client's current state"
+											:disabled="lockClient2")
 											i-option(v-for="(long, short) in stateList" :value="short") {{ long }}
-									form-item(label="Current ZIP Code" prop="zip")
-										i-input(v-model="client2.zip" placeholder="Enter the second client's current zip code" v-mask="'#####'")
+									form-item(label="Current ZIP Code" prop="zip" :required="requireClient2Address" :show-message="false")
+										i-input(v-model="client2.zip" placeholder="Enter the second client's current zip code" v-mask="'#####'" :disabled="lockClient2")
 					.section-content-inner.realtor-details(v-if="section === 5")
 						checkbox(size="large" v-model="usingRealtor" :disabled="!usingClient") I have a real estate agent I wish to enter
 						.realtor-client-toggle-text Information from either a realtor or a client is needed to schedule an inspection
@@ -186,17 +189,18 @@ html
 											i-option(value="cell") Cell
 											i-option(value="work") Work
 											i-option(value="other") Other
-							form-item(label="Address" prop="address")
+							form-item(label="Address" prop="address" :required="requireRealtorAddress" :show-message="false")
 								i-input(v-model="realtor.address" placeholder="Enter the realtor's address")
-							form-item(label="City" prop="city")
+							form-item(label="City" prop="city" :required="requireRealtorAddress" :show-message="false")
 								i-input(v-model="realtor.city" placeholder="Enter the realtor's city")
-							form-item(label="State" prop="state")
+							form-item(label="State" prop="state" :required="requireRealtorAddress" :show-message="false")
 								i-select(
 									v-model="realtor.state"
 									filterable
+									clearable
 									placeholder="Select the realtor's state")
 									i-option(v-for="(long, short) in stateList" :value="short") {{ long }}
-							form-item(label="Current ZIP Code" prop="zip")
+							form-item(label="Current ZIP Code" prop="zip" :required="requireRealtorAddress" :show-message="false")
 								i-input(v-model="realtor.zip" placeholder="Enter the realtor's zip code" v-mask="'#####'")
 					.section-content-inner.inner-centered.final-review(v-if="section === 6")
 						.final-review-title Ready to Schedule?
@@ -242,7 +246,7 @@ html
 							.sidebar-value {{ property.age }}
 						.sidebar-pair
 							.sidebar-key Foundation Type
-							.sidebar-value {{ property.type }}
+							.sidebar-value {{ property.foundation }}
 					.sidebar-section(v-if="section > 3") Appointment Information
 					.sidebar-section-content(v-if="section > 3")
 						.sidebar-pair
@@ -331,7 +335,7 @@ html
 			el: "#app",
 			data: {
 				mapAccessToken: "pk.eyJ1IjoiaW5zcGVjdHdhcmUiLCJhIjoiY2p5dDBkZjJ1MDByZzNvbWZmMDV4NnI2MiJ9.HYKSg6GlZrG7xz15KxwaIQ",
-				section: 3,
+				section: 4,
 				sections: [
 					"Inspection Scheduler",
 					"Services",
@@ -353,7 +357,7 @@ html
 					zip: "",
 					sqft: "",
 					age: "",
-					type: ""
+					foundation: ""
 				},
 				propertyAddressMatches: [],
 				propertyCityMatches: [],
@@ -365,7 +369,7 @@ html
 					zip: [{ required: true, message: "The zip code cannot be blank", trigger: "blur" }],
 					sqft: [{ required: true, message: "The square footage cannot be blank", trigger: "blur" }],
 					age: [{ required: true, message: "The age of the home cannot be blank", trigger: "blur" }],
-					type: [{ required: true, message: "The foundation type cannot be blank", trigger: "change" }]
+					foundation: [{ required: true, message: "The foundation type cannot be blank", trigger: "change" }]
 				},
 				propertyMap: undefined,
 				propertyMapMarker: undefined,
@@ -374,7 +378,8 @@ html
 				appointment: {
 					date: "",
 					time: "",
-					inspector: ""
+					inspectorName: "",
+					inspectorId: ""
 				},
 				calTimeSlots: {},
 				calMonthNames: [
@@ -414,7 +419,7 @@ html
 					state: "",
 					zip: ""
 				},
-				clientRules: {
+				client1Rules: {
 					firstName: [{ required: true, message: "The first name cannot be blank", trigger: "blur" }],
 					lastName: [{ required: true, message: "The last name cannot be blank", trigger: "blur" }],
 					email: [
@@ -423,6 +428,10 @@ html
 					],
 					phone: [{ required: true, message: "The phone number cannot be blank", trigger: "blur" }]
 				},
+				client2Rules: {
+					email: [{ type: "email", message: "Please enter a valid email address", trigger: "blur" }]
+				},
+				lockClient2: true,
 				usingRealtor: true,
 				realtor: {
 					firstName: "",
@@ -809,17 +818,10 @@ html
 					});
 				},
 				formatTime: function(time) {
-					let hour = Math.floor(time / 100);
-					let minute = time % 100;
-					let period;
-
-					if (hour > 12) {
-						hour -= 12;
-						period = "PM";
-					} else {
-						period = "AM";
-					}
-
+					let hour = Math.floor(time / 60);
+					let minute = time % 60;
+					let period = hour < 12 || hour == 24 ? "AM" : "PM";
+					hour = hour % 12 || 12;
 					return `${("" + hour).padStart(2, '0')}:${("" + minute).padStart(2, '0')} ${period}`;
 				},
 				formatDate: function(date) {
@@ -867,15 +869,53 @@ html
 						}
 					}
 
-					chosenServices = chosenServices.join("|");
-
-					const url = `${apiURL}/api/scheduling/pricing?account=${accountId}&services=${chosenServices}&sqft=${this.property.sqft}&age=${this.property.age}&foundation=${this.property.type}`;
+					const url = `${apiURL}/api/scheduling/pricing?account=${accountId}&services=${chosenServices.join("|")}&sqft=${this.property.sqft}&age=${this.property.age}&foundation=${this.property.foundation}`;
 
 					req.open("GET", url);
 					req.send();
 				},
 				scheduleInspection: function() {
-					this.nextSection();
+					let req = new XMLHttpRequest();
+					let self = this;
+
+					req.addEventListener("load", function() {
+						let data = JSON.parse(this.responseText).data;
+
+						if (this.readyState == 200 && data.status == 200) {
+							self.nextSection();
+						} else {
+							this.$Modal.error({
+								title: "Scheduling Error",
+								content: `There was an error with the scheduling information:\n\n${data.message}`,
+							});
+						}
+					});
+
+					let chosenServices = [];
+
+					for (let service of this.services) {
+						if (service.chosen) {
+							chosenServices.push(service.short);
+						}
+					}
+
+					const payload = {
+						services: chosenServices,
+						property: this.property,
+						appointment: this.appointment,
+						client1: this.client1,
+						client2: this.client2,
+						realtor: this.realtor
+					};
+
+					req.open("POST", `${apiURL}/api/scheduling/schedule?account=${accountId}`);
+					req.setRequestHeader("Content-Type", "application/json");
+					req.send(JSON.stringify(payload));
+				},
+				validateClient2: function() {
+					this.$refs["client2Form"].validate((valid) => {
+						this.lockClient2 = !this.client2.email || !valid;
+					});
 				}
 			},
 			computed: {
@@ -987,6 +1027,15 @@ html
 					}
 
 					return days;
+				},
+				requireClient1Address: function() {
+					return !!this.client1.address || !!this.client1.city || !!this.client1.state || !!this.client1.zip;
+				},
+				requireClient2Address: function() {
+					return !!this.client2.address || !!this.client2.city || !!this.client2.state || !!this.client2.zip;
+				},
+				requireRealtorAddress: function() {
+					return !!this.realtor.address || !!this.realtor.city || !!this.realtor.state || !!this.realtor.zip;
 				}
 			},
 			mounted: function() {

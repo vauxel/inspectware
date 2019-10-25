@@ -32,10 +32,10 @@ const ClientSchema = new Mongoose.Schema({
 		state: String,
 		zip: Number
 	},
-	inspections: {
+	inspections: [{
 		type: String,
 		ref: "Inspection"
-	}
+	}]
 });
 
 export default Mongoose.model("Client", ClientSchema);
