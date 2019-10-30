@@ -194,9 +194,45 @@ export class Scheduler {
 
 		let invoiceItems = [];
 		let invoiceSubtotal = 0;
-		let accountServices = account.get("services");
 
+		let servicesIncludesFull = services.includes("full");
+		let servicesIncludesPre = services.includes("pre");
+
+		if ((servicesIncludesFull || servicesIncludesPre) && account.get("sqft_pricing").enabled) {
+			let price = this.calculateTieredPrice(account.get("sqft_pricing").ranges, sqft);
+
+			let mainServiceName = "";
+			if (servicesIncludesFull) {
+				mainServiceName = "Full Home Inspection";
+			} else if (servicesIncludesPre) {
+				mainServiceName = "Pre-Drywall Inspection";
+			}
+
+			invoiceItems.push({
+				name: mainServiceName + " (" + sqft + " sqft)",
+				price: price
+			});
+
+			invoiceSubtotal += price;
+		}
+
+		if (servicesIncludesFull && account.get("age_pricing").enabled) {
+			let price = this.calculateTieredPrice(account.get("age_pricing").ranges, age);
+
+			invoiceItems.push({
+				name: "House Age: " + age + " yrs",
+				price: price
+			});
+
+			invoiceSubtotal += price;
+		}
+
+		let accountServices = account.get("services");
 		for (let serviceName of services) {
+			if (serviceName == "full" || serviceName == "pre") {
+				continue;
+			}
+
 			let service = accountServices.find((service: {short_name: string}) => service.short_name === serviceName);
 
 			if (!service) {
@@ -205,28 +241,6 @@ export class Scheduler {
 
 			invoiceItems.push({ name: service.long_name, price: service.price });
 			invoiceSubtotal += service.price;
-		}
-
-		if ((services.includes("full") || services.includes("pre")) && account.get("sqft_pricing").enabled) {
-			let price = this.calculateTieredPrice(account.get("sqft_pricing").ranges, sqft);
-
-			invoiceItems.push({
-				name: "Square Footage: " + sqft,
-				price: price
-			});
-
-			invoiceSubtotal += price;
-		}
-
-		if (services.includes("full") && account.get("age_pricing").enabled) {
-			let price = this.calculateTieredPrice(account.get("age_pricing").ranges, age);
-
-			invoiceItems.push({
-				name: "House Age: " + age,
-				price: price
-			});
-
-			invoiceSubtotal += price;
 		}
 
 		let foundationPrice = account.get("foundation_pricing")[foundation];
@@ -495,11 +509,22 @@ export class Scheduler {
 			throw new InvalidParameterException("No services");
 		}
 
-		if (services.includes("full") && services.includes("pre")) {
+		let includesFull = services.includes("full");
+		let includesPre = services.includes("pre");
+
+		if (includesFull && includesPre) {
 			throw new InvalidParameterException("Cannot schedule both a full and pre inspection");
 		}
 
+		if (!includesFull && !includesPre) {
+			throw new InvalidParameterException("Must schedule either a full or pre inspection");
+		}
+
 		for (let serviceName of services) {
+			if (serviceName == "full" || serviceName == "pre") {
+				continue;
+			}
+
 			let service = account.get("services").find((service: {short_name: string}) => service.short_name === serviceName);
 
 			if (!service) {

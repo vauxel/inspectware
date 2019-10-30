@@ -24,9 +24,18 @@ html
 						.splash-title {{ account }}
 						i-button(type="primary" @click="nextSection") Proceed to Scheduling
 					.section-content-inner.inner-centered.services(v-if="section === 1")
-						ul.services-list
-							li(v-for="(service, index) in services" v-key="service")
-								Checkbox(v-model="services[index].chosen") {{ service.long }}
+						Card.services-card
+							.services-title(slot="title") Main Service
+							radio-group(v-model="mainService" type="button" size="large")
+								Radio(label="full")
+									span Full Home Inspection
+								Radio(label="pre")
+									span Pre-Drywall Inspection
+						Card.services-card
+							.services-title(slot="title") Additional Services
+							checkbox-group(v-model="services")
+								Checkbox.services-item(v-for="(service, index) in allServices" v-key="service" :label="service.short" size="large")
+									span {{ service.long }}
 					.section-content-inner.property-details(v-if="section === 2")
 						.property-details-form
 							i-form(ref="propertyForm" :model="property" :rules="propertyRules" label-position="left" :label-width="120")
@@ -215,10 +224,10 @@ html
 							| You're all set for an inspection on 
 							code {{ formatDate(appointment.date) }} @ {{ formatTime(appointment.time) }}
 							|  with 
-							code {{ appointment.inspector }}
+							code {{ appointment.inspectorName }}
 							|  at 
 							code {{ propertyFullAddress }}
-							| .
+							| !
 				.section-footer
 					.branding
 						.branding-text Powered By
@@ -257,7 +266,7 @@ html
 							.sidebar-value {{ formatTime(appointment.time) }}
 						.sidebar-pair
 							.sidebar-key Inspector
-							.sidebar-value {{ appointment.inspector }}
+							.sidebar-value {{ appointment.inspectorName }}
 					.sidebar-section(v-if="section > 4 && usingClient") Client One Information
 					.sidebar-section-content(v-if="section > 4 && usingClient")
 						.sidebar-pair
@@ -335,7 +344,7 @@ html
 			el: "#app",
 			data: {
 				mapAccessToken: "pk.eyJ1IjoiaW5zcGVjdHdhcmUiLCJhIjoiY2p5dDBkZjJ1MDByZzNvbWZmMDV4NnI2MiJ9.HYKSg6GlZrG7xz15KxwaIQ",
-				section: 4,
+				section: 0,
 				sections: [
 					"Inspection Scheduler",
 					"Services",
@@ -348,6 +357,8 @@ html
 				],
 				id: accountId,
 				account: accountName,
+				mainService: "",
+				allServices: [],
 				services: [],
 				property: {
 					address1: "",
@@ -476,16 +487,10 @@ html
 					let passed = false;
 
 					if (this.section === 1) { // Services
-						let foundTrue = false;
-
-						for (let service of this.services) {
-							foundTrue = foundTrue || service.chosen;
-						}
-
-						if (!foundTrue) {
+						if (this.mainService == "") {
 							this.$Modal.error({
 								title: "Minimum Services Requirement",
-								content: "You must select atleast one service to schedule."
+								content: "You must select a main service to schedule."
 							});
 						} else {
 							passed = true;
@@ -577,7 +582,7 @@ html
 
 					req.addEventListener("load", function() {
 						let data = JSON.parse(this.responseText).data;
-						self.services = data;
+						self.allServices = data;
 					});
 
 					const url = `${apiURL}/api/scheduling/services?account=${accountId}`;
@@ -805,11 +810,11 @@ html
 				chooseAppointment: function(timeslot, date) {
 					this.$Modal.confirm({
 						title: "Confirm Appointment Details",
-						content: `<p>You chose an appointment with the following details:</p><br><p>Date: <code>${this.formatDate(date.valueOf())}</code></p><p>Time: <code>${this.formatTime(timeslot.time)}</code></p><p>Inspector: <code>${timeslot.inspectorName}</code></p>`,
+						content: `<p>You chose an appointment with the following details:</p><br><p>Date: <code>${date.toDateString()}</code></p><p>Time: <code>${this.formatTime(timeslot.time)}</code></p><p>Inspector: <code>${timeslot.inspectorName}</code></p>`,
 						okText: "Confirm Appointment",
 						cancelText: "Cancel",
 						onOk: () => {
-							this.appointment.date = date.valueOf();
+							this.appointment.date = `${date.getFullYear()}${((date.getMonth() + 1) + "").padStart(2, "0")}${(date.getDate() + "").padStart(2, "0")}`;
 							this.appointment.time = timeslot.time;
 							this.appointment.inspectorId = timeslot.inspectorId;
 							this.appointment.inspectorName = timeslot.inspectorName;
@@ -824,8 +829,8 @@ html
 					hour = hour % 12 || 12;
 					return `${("" + hour).padStart(2, '0')}:${("" + minute).padStart(2, '0')} ${period}`;
 				},
-				formatDate: function(date) {
-					return new Date(date).toDateString();
+				formatDate: function(datestr) {
+					return `${datestr.substring(4, 6)}/${datestr.substring(6, 8)}/${datestr.substring(0, 4)}`;
 				},
 				getCalAvailabilities: function() {
 					let req = new XMLHttpRequest();
@@ -861,15 +866,10 @@ html
 						self.invoice.total = data.total;
 					});
 
-					let chosenServices = [];
+					let services = this.services.slice(0);
+					services.push(this.mainService);
 
-					for (let service of this.services) {
-						if (service.chosen) {
-							chosenServices.push(service.short);
-						}
-					}
-
-					const url = `${apiURL}/api/scheduling/pricing?account=${accountId}&services=${chosenServices.join("|")}&sqft=${this.property.sqft}&age=${this.property.age}&foundation=${this.property.foundation}`;
+					const url = `${apiURL}/api/scheduling/pricing?account=${accountId}&services=${services.join("|")}&sqft=${this.property.sqft}&age=${this.property.age}&foundation=${this.property.foundation}`;
 
 					req.open("GET", url);
 					req.send();
@@ -879,34 +879,31 @@ html
 					let self = this;
 
 					req.addEventListener("load", function() {
-						let data = JSON.parse(this.responseText).data;
+						let data = JSON.parse(this.responseText);
 
-						if (this.readyState == 200 && data.status == 200) {
+						if (data.status == 200) {
 							self.nextSection();
 						} else {
-							this.$Modal.error({
+							self.$Modal.error({
 								title: "Scheduling Error",
 								content: `There was an error with the scheduling information:\n\n${data.message}`,
 							});
 						}
 					});
 
-					let chosenServices = [];
-
-					for (let service of this.services) {
-						if (service.chosen) {
-							chosenServices.push(service.short);
-						}
-					}
+					let services = this.services.slice(0);
+					services.push(this.mainService);
 
 					const payload = {
-						services: chosenServices,
+						services: services,
 						property: this.property,
 						appointment: this.appointment,
 						client1: this.client1,
 						client2: this.client2,
 						realtor: this.realtor
 					};
+
+					console.log(payload);
 
 					req.open("POST", `${apiURL}/api/scheduling/schedule?account=${accountId}`);
 					req.setRequestHeader("Content-Type", "application/json");
@@ -954,9 +951,18 @@ html
 				chosenServicesString: function() {
 					let chosenServices = "<ul style='padding-left: 10px;'>";
 
+					if (this.mainService == "full") {
+						chosenServices += "<li>Full Home Inspection</li>";
+					} else if (this.mainService == "pre") {
+						chosenServices += "<li>Pre-Drywall Inspection</li>";
+					}
+
 					for (let service of this.services) {
-						if (service.chosen) {
-							chosenServices += "<li>" + service.long + "</li>";
+						for (let allService of this.allServices) {
+							if (allService.short == service) {
+								chosenServices += "<li>" + allService.long + "</li>";
+								break;
+							}
 						}
 					}
 

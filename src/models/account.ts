@@ -130,14 +130,14 @@ const AccountSchema = new Mongoose.Schema({
 		}],
 		default: [
 			{
-				short_name: "full",
-				full_name: "Full Home Inspection",
-				price: 400
+				short_name: "radon",
+				long_name: "Radon Inspection",
+				price: 100
 			},
 			{
-				short_name: "pre",
-				full_name: "Pre-Drywall Inspection",
-				price: 200
+				short_name: "termite",
+				long_name: "Termite Inspection",
+				price: 100
 			}
 		]
 	}

@@ -127,10 +127,21 @@ body {
 		}
 		
 		.services {
-			.services-list {
-				list-style: none;
-				line-height: 2;
-				transform: scale(1.75);
+			.services-title {
+				font-size: $text-2xl;
+			}
+
+			.services-card {
+				width: 50%;
+				margin-bottom: 15px;
+			}
+
+			.services-item {
+				display: block;
+				
+				&:not(:last-of-type) {
+					margin-bottom: 10px;
+				}
 			}
 		}
 
