@@ -1,0 +1,6 @@
+{
+    "id_generation": {
+        "charset": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+        "length": 8
+    }
+}

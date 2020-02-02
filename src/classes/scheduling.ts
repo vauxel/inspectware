@@ -1,12 +1,12 @@
-import { InvalidParameterException, InvalidOperationException } from "@/classes/exceptions";
+import { InvalidParameterException, InvalidOperationException } from "@classes/exceptions";
 import { Document } from "mongoose";
 import moment from "moment";
-import { Availability } from "@/classes/preferences";
-import Auth from "@/classes/auth";
-import Inspection from "@/models/inspection";
-import Client from "@/models/client";
-import Realtor from "@/models/realtor";
-import Inspector from "@/models/inspector";
+import { Inspector } from "@classes/inspector";
+import Auth from "@classes/auth";
+import InspectionModel from "@models/inspection";
+import ClientModel from "@models/client";
+import RealtorModel from "@models/realtor";
+import InspectorModel from "@models/inspector";
 
 /**
  * Interface for scheduler property data
@@ -93,10 +93,10 @@ export class Scheduler {
 	/**
 	 * Gets the appointment availabilities between a date range
 	 * @param account the account document
-	 * @param start the starting timestamp
-	 * @param end the ending timestamp
+	 * @param start the starting datestamp
+	 * @param end the ending datestamp
 	 */
-	public static async getAvailabilities(account: Document, start: number, end: number) {
+	public static async getAvailabilities(account: Document, start: string, end: string) {
 		let startMoment = moment(start, "YYYYMMDD", true);
 		let endMoment = moment(end, "YYYYMMDD", true);
 
@@ -123,7 +123,8 @@ export class Scheduler {
 				let inspectorId: string = inspector._id;
 				let inspectorName: string = inspector.first_name + " " + inspector.last_name;
 				let weekday = dateMoment.format("dddd").toLowerCase();
-				let timeoffs = Availability.getTimeoff(inspector);
+				let timeoffs = Inspector.getTimeoff(inspector);
+				let inspections = await Inspector.getInspections(inspector, start, end);
 
 				for (let timeslot of inspector.timeslots[weekday]) {
 					let blockedoff = false;
@@ -132,6 +133,15 @@ export class Scheduler {
 						if (timeoff.date == dateString && timeoff.time == timeslot) {
 							blockedoff = true;
 							break;
+						}
+					}
+
+					if (!blockedoff) {
+						for (let inspection of inspections) {
+							if (inspection.date == dateString && inspection.time == timeslot) {
+								blockedoff = true;
+								break;
+							}
 						}
 					}
 
@@ -289,9 +299,12 @@ export class Scheduler {
 		}
 		
 		let weekday = moment(date).format("dddd").toLowerCase();
-		let timeoffs = Availability.getTimeoff(inspector);
+		let timeoffs = Inspector.getTimeoff(inspector);
+		let inspections = await Inspector.getInspections(inspector, date, date);
 
-		return inspector.timeslots[weekday].includes(time) && timeoffs.find(timeoff => timeoff.date == date && timeoff.time == time) === undefined;
+		return inspector.timeslots[weekday].includes(time) &&
+			   timeoffs.find((timeoff: {date: string, time: number}) => timeoff.date == date && timeoff.time == time) === undefined &&
+			   inspections.find((inspection: {date: string, time: number}) => inspection.date == date && inspection.time == time) === undefined;
 	}
 
 	/**
@@ -334,11 +347,11 @@ export class Scheduler {
 		let createdClient1 = false;
 		let client1Document: Document | null = null;
 		if (includeClient1Data) {
-			client1Document = await Client.findOne({ email: client1.email });
+			client1Document = await ClientModel.findOne({ email: client1.email });
 
 			if (!client1Document) {
 				createdClient1 = true;
-				client1Document = new Client({
+				client1Document = new ClientModel({
 					email: client1.email,
 					password: Auth.generatePassword(8),
 					phone: client1.phone.replace(/\D/g, ""),
@@ -367,11 +380,11 @@ export class Scheduler {
 		let createdClient2 = false;
 		let client2Document: Document | null = null;
 		if (includeClient2Data) {
-			client2Document = await Client.findOne({ email: client2.email });
+			client2Document = await ClientModel.findOne({ email: client2.email });
 
 			if (!client2Document) {
 				createdClient2 = true;
-				client2Document = new Client({
+				client2Document = new ClientModel({
 					email: client2.email,
 					password: Auth.generatePassword(8),
 					phone: client2.phone.replace(/\D/g, ""),
@@ -398,11 +411,11 @@ export class Scheduler {
 		}
 
 		let createdRealtor = false;
-		let realtorDocument: Document | null = await Realtor.findOne({ email: realtor.email });
+		let realtorDocument: Document | null = await RealtorModel.findOne({ email: realtor.email });
 		if (includeRealtorData) {
 			if (!realtorDocument) {
 				createdRealtor = true;
-				realtorDocument = new Realtor({
+				realtorDocument = new RealtorModel({
 					email: realtor.email,
 					password: Auth.generatePassword(8),
 					phone_primary: {
@@ -440,15 +453,16 @@ export class Scheduler {
 			await realtorDocument.save();
 		}
 
-		let inspector = await Inspector.findOne({ _id: appointment.inspectorId });
+		let inspector = await InspectorModel.findOne({ _id: appointment.inspectorId });
 
 		if (!inspector) {
 			throw new InvalidParameterException("Invalid inspector id");
 		}
 
-		const inspection = new Inspection({
+		const inspection = new InspectionModel({
 			inspection_number: account.get("inspection_counter"),
-			date: moment(appointment.date, "YYYYMMDD").toDate(),
+			date: appointment.date,
+			time: appointment.time,
 			property: {
 				address1: property.address1,
 				address2: property.address2,

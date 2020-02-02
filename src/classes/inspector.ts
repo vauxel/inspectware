@@ -1,6 +1,7 @@
-import moment from "moment";
+import { InvalidParameterException, InvalidOperationException } from "@classes/exceptions";
 import { Document } from "mongoose";
-import { InvalidParameterException, InvalidOperationException } from "@/classes/exceptions";
+import moment from "moment";
+import { Inspection } from "@classes/inspection";
 
 /**
  * Interface for timeslots on each day of the week
@@ -16,10 +17,53 @@ interface TimeslotsDays {
 }
 
 /**
- * Manages inspector availability preferences
+ * Manages inspector functionalities
  */
-export class Availability {
-	/**
+export class Inspector {
+    /**
+	 * Gets the inspections between a date range
+	 * @param inspector the inspector document
+	 * @param start the starting datestamp
+	 * @param end the ending datestamp
+	 */
+    public static async getInspections(inspector: Document, start: string, end: string) {
+        let startMoment = moment(start, "YYYYMMDD", true);
+		let endMoment = moment(end, "YYYYMMDD", true);
+
+		if (!startMoment.isValid()) {
+			throw new InvalidParameterException("Invalid start date");
+		}
+
+		if (!endMoment.isValid()) {
+			throw new InvalidParameterException("Invalid end date");
+        }
+
+		await inspector.populate({
+            path: "inspections",
+            populate: { path: "client1 client2 realtor" }
+        }).execPopulate();
+
+        let inspections = [];
+
+        for (let inspection of inspector.get("inspections")) {
+            let client1Name = inspection.client1 ? `${inspection.client1.first_name} ${inspection.client1.last_name}` : "";
+            let client2Name = inspection.client2 ? `${inspection.client2.first_name} ${inspection.client2.last_name}` : "";
+            let realtorName = inspection.realtor ? `${inspection.realtor.first_name} ${inspection.realtor.last_name}` : "";
+
+            inspections.push({
+                id: inspection._id,
+                address: Inspection.formatPropertyAddress(inspection.property),
+                date: inspection.date,
+                time: inspection.time,
+                client: `${client1Name}${client2Name ? (" & " + client2Name) : ""}`,
+                realtor: realtorName
+            });
+        }
+        
+        return inspections;
+    }
+
+    /**
 	 * Gets the timeslot availabilities for an inspector
 	 * @param inspector the inspector document
 	 * @returns the timeslot availabilities for every day of the week
@@ -60,13 +104,13 @@ export class Availability {
 			throw new InvalidParameterException("Invalid time");
 		}
 
-		let timeslots: number[] = inspector.get("timeslots." + day);
+		let timeslots: number[] = inspector.get(`timeslots.${day}`);
 		if (timeslots.indexOf(time) != -1) {
 			throw new InvalidOperationException("Duplicate timeslot");
 		}
 
 		timeslots.push(time);
-		inspector.set("timeslots." + day, timeslots.sort((a, b) => a - b));
+		inspector.set(`timeslots.${day}`, timeslots.sort((a, b) => a - b));
 		inspector.save();
 		return true;
 	}
@@ -95,14 +139,14 @@ export class Availability {
 			throw new InvalidParameterException("Invalid time");
 		}
 
-		let timeslots: number[] = inspector.get("timeslots." + day);
+		let timeslots: number[] = inspector.get(`timeslots.${day}`);
 		let index: number = timeslots.indexOf(time);
 		if (index == -1) {
 			throw new InvalidOperationException("Nonexistent timeslot");
 		}
 
 		timeslots.splice(index, 1);
-		inspector.set("timeslots." + day, timeslots);
+		inspector.set(`timeslots.${day}`, timeslots);
 		inspector.save();
 		return true;
 	}

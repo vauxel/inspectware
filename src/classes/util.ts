@@ -1,10 +1,13 @@
 import { Response } from "express";
-import RuntimeException from "@/classes/exception";
-import { InvalidParameterException } from "@/classes/exceptions";
-import Account from "@/models/account";
-import Inspector from "@/models/inspector";
-import Client from "@/models/client";
-import Realtor from "@/models/realtor";
+import RuntimeException from "@classes/exception";
+import { InvalidParameterException } from "@classes/exceptions";
+import Account from "@models/account";
+import Inspector from "@models/inspector";
+import Client from "@models/client";
+import Realtor from "@models/realtor";
+import Inspection from "@models/inspection";
+import generate from "nanoid/generate";
+import config from "@root/conf.json";
 
 /**
  * Utility class for common functions
@@ -87,13 +90,52 @@ export default class Util {
 	}
 
 	/**
+	 * Resolves an inspection id to an inspection document
+	 * @param inspectionId the inspection id
+	 */
+	public static async resolveInspection(inspectionId: string) {
+		let inspection;
+		try {
+			inspection = await Inspection.findById(inspectionId);
+		} catch (e) {
+			throw new RuntimeException("Database error: " + e.message);
+		}
+
+		if (!inspection) {
+			throw new InvalidParameterException("An inspection by that id does not exist");
+		}
+
+		return inspection;
+	}
+
+	/**
 	 * Handles an error and responses to it accordingly
 	 * @param e the error object
 	 * @param res the express response object
 	 */
 	public static handleError(e: Error, res: Response) {
+		console.error(e.message);
 		let status = e instanceof RuntimeException ? e.getHTTPStatus : 500;
 		let message = e instanceof RuntimeException ? e.getMessage : e.message;
 		res.status(status).json({ status, message });
+	}
+
+	/**
+	 * Generates a unique identifier
+	 * @param charset the optional charset
+	 * @param length the optional length
+	 */
+	public static generateIdentifier(charset = config.id_generation.charset, length = config.id_generation.length) {
+		return generate(charset, length);
+	}
+
+	/**
+	 * Validates a unique identifier
+	 * @param identifier the identifier to validate
+	 * @param charset the optional charset
+	 * @param length the optional length
+	 */
+	public static isValidIdentifier(identifier: string, charset = config.id_generation.charset, length = config.id_generation.length) {
+		return new RegExp(`^([${charset}]{${length}})$`).test(identifier);
 	}
 };

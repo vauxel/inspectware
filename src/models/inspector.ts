@@ -1,10 +1,10 @@
 import Mongoose from "mongoose";
-import ShortId from "shortid";
+import Util from "@classes/util";
 
 const InspectorSchema = new Mongoose.Schema({
 	_id: {
 		type: String,
-		default: ShortId.generate
+		default: () => Util.generateIdentifier()
 	},
 	account: {
 		type: String,

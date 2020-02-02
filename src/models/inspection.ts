@@ -1,17 +1,18 @@
 import Mongoose from "mongoose";
-import ShortId from "shortid";
+import Util from "@classes/util";
 
 const InspectionSchema = new Mongoose.Schema({
 	_id: {
 		type: String,
-		default: ShortId.generate
+		default: () => Util.generateIdentifier()
 	},
 	inspection_number: Number,
 	scheduled: {
 		type: Date,
 		default: Date.now
 	},
-	date: Date,
+	date: String,
+	time: Number,
 	property: {
 		address1: String,
 		address2: String,

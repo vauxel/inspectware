@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
-import Auth from "@/classes/auth";
-import Util from "@/classes/util";
-import { restrictAuthorization } from "@/routes/restrictions";
+import Auth from "@classes/auth";
+import Util from "@classes/util";
+import { restrictAuthorization } from "@routes/restrictions";
 
 const AuthRouter = Router();
 
@@ -19,7 +19,6 @@ AuthRouter.post("/login", async (req: Request, res: Response) => {
 });
 
 AuthRouter.post("/signup", async (req: Request, res: Response) => {
-	console.log(req.body);
 	try {
 		const data = await Auth.registerAccount(
 			req.body.first_name,

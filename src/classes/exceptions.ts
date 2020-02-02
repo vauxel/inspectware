@@ -1,4 +1,4 @@
-import RuntimeException from "@/classes/exception"
+import RuntimeException from "@classes/exception"
 
 /**
  * Exception thrown when the inputted data is unsanitized

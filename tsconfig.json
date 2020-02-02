@@ -5,6 +5,7 @@
 		"strict": true,
 		"importHelpers": true,
 		"moduleResolution": "node",
+		"resolveJsonModule": true,
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"noImplicitAny": true,
@@ -14,9 +15,10 @@
 		"outDir": "dist",
 		"baseUrl": ".",
 		"paths": {
-			"@/*": [
-				"src/*"
-			]
+			"@root/*": [ "*" ],
+			"@classes/*": [ "src/classes/*" ],
+			"@models/*": [ "src/models/*" ],
+			"@routes/*": [ "src/routes/*" ]
 		},
 		"lib": [
 			"esnext",

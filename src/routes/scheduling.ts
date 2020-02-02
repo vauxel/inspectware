@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
-import { Scheduler } from "@/classes/scheduling";
-import Util from "@/classes/util";
+import { Scheduler } from "@classes/scheduling";
+import Util from "@classes/util";
 
 const SchedulingRouter = Router();
 

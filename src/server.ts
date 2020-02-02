@@ -14,10 +14,11 @@ if (!process.argv.includes("-staticsecret")) {
 	console.log("! Auth using static, debugging secret !");
 }
 
-import indexRouter from "@/routes/index";
-import authRouter from "@/routes/auth";
-import schedulingRouter from "@/routes/scheduling";
-import preferencesRouter from "@/routes/preferences";
+import indexRouter from "@routes/index";
+import authRouter from "@routes/auth";
+import schedulingRouter from "@routes/scheduling";
+import inspectorRouter from "@routes/inspector";
+import inspectionRouter from "@routes/inspection";
 
 mongoose.connect("mongodb://localhost:27017/inspectware", {useNewUrlParser: true});
 
@@ -26,17 +27,23 @@ server.set("view engine", "pug");
 server.use(bodyParser.json());
 server.use(cors());
 server.use(sassMiddleware({
-	src: join(__dirname, "../public/css"),
+	src: "public/css",
 	indentedSyntax: false,
 	outputStyle: "compressed",
 	prefix: "/css"
 }));
-server.use(express.static(join(__dirname, "../public")));
+server.use(express.static("public"));
+
+server.use((req, res, next) => {
+	console.log(new Date().toLocaleTimeString(), req.method, req.url);
+	next();
+});
 
 server.use("/", indexRouter);
 server.use("/api/auth", authRouter);
 server.use("/api/scheduling", schedulingRouter);
-server.use("/api/prefs", preferencesRouter);
+server.use("/api/inspector", inspectorRouter);
+server.use("/api/inspection", inspectionRouter);
 
 const dashboard = express();
 dashboard.use(express.static(join(__dirname, "../dashboard/dist")));
@@ -45,11 +52,6 @@ dashboard.use("*", (req, res) => {
 });
 
 server.use("/dash", dashboard);
-
-server.use((req, res, next) => {
-	console.log(new Date().toLocaleTimeString(), req.method, req.url);
-	next();
-});
 
 server.listen(port, () => {
 	console.log(`Server started on port ${port}`);

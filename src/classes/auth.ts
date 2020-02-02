@@ -1,13 +1,14 @@
 import { sign } from "jsonwebtoken";
 import { hashSync, compareSync } from "bcrypt";
 import { randomBytes } from "crypto";
-import ShortId from "shortid";
-import RuntimeException from "@/classes/exception";
-import { InvalidParameterException, SanitizationException, InvalidOperationException } from "@/classes/exceptions";
-import Account from "@/models/account";
-import Inspector from "@/models/inspector";
-import Client from "@/models/client";
-import Realtor from "@/models/realtor";
+import generate from "nanoid/generate";
+import RuntimeException from "@classes/exception";
+import { InvalidParameterException, SanitizationException, InvalidOperationException } from "@classes/exceptions";
+import Account from "@models/account";
+import Inspector from "@models/inspector";
+import Client from "@models/client";
+import Realtor from "@models/realtor";
+import Util from "@classes/util";
 
 /**
  * Exception thrown when tested login credentials are invalid
@@ -309,7 +310,7 @@ export default class Auth {
 	public static async updatePassword(affiliation: string, userId: string, currentPass: string, newPass: string) {
 		const model = this.getModelFromAffiliation(affiliation);
 
-		if (!ShortId.isValid(userId)) {
+		if (!Util.isValidIdentifier(userId)) {
 			throw new InvalidParameterException("Invalid user id");
 		}
 
