@@ -8,11 +8,7 @@ const InspectorRouter = Router();
 InspectorRouter.get("/inspections", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
 	try {
 		const inspector = await Util.resolveInspector(res.locals.auth.id);
-		const data = await Inspector.getInspections(
-			inspector,
-			req.query.from,
-			req.query.until
-		);
+		const data = await Inspector.getInspections(inspector);
 
 		res.json({
 			status: 200,

@@ -6,7 +6,7 @@ const SchedulingRouter = Router();
 
 SchedulingRouter.get("/services", async (req: Request, res: Response) => {
 	try {
-		const account = await Util.resolveAccount(req.query.account);
+		const account = await Util.resolveAccount(<string>req.query.account);
 		const data = await Scheduler.getServices(account);
 
 		res.json({
@@ -20,13 +20,13 @@ SchedulingRouter.get("/services", async (req: Request, res: Response) => {
 
 SchedulingRouter.get("/pricing", async (req: Request, res: Response) => {
 	try {
-		const account = await Util.resolveAccount(req.query.account);
+		const account = await Util.resolveAccount(<string>req.query.account);
 		const data = await Scheduler.calculatePricing(
 			account,
-			req.query.services ? req.query.services.split("|") : undefined,
-			req.query.sqft,
-			req.query.age,
-			req.query.foundation
+			(<any>req.query.services) ? (<any>req.query.services).split("|") : undefined,
+			parseInt(<string>req.query.sqft),
+			parseInt(<string>req.query.age),
+			<string>req.query.foundation
 		);
 
 		res.json({
@@ -40,11 +40,11 @@ SchedulingRouter.get("/pricing", async (req: Request, res: Response) => {
 
 SchedulingRouter.get("/availabilities", async (req: Request, res: Response) => {
 	try {
-		const account = await Util.resolveAccount(req.query.account);
+		const account = await Util.resolveAccount(<string>req.query.account);
 		const data = await Scheduler.getAvailabilities(
 			account,
-			req.query.from,
-			req.query.until
+			<string>req.query.from,
+			<string>req.query.until
 		);
 
 		res.json({
@@ -58,7 +58,7 @@ SchedulingRouter.get("/availabilities", async (req: Request, res: Response) => {
 
 SchedulingRouter.post("/schedule", async (req: Request, res: Response) => {
 	try {
-		const account = await Util.resolveAccount(req.query.account);
+		const account = await Util.resolveAccount(<string>req.query.account);
 		const data = await Scheduler.schedule(
 			account,
 			req.body.services,

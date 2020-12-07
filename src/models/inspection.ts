@@ -8,7 +8,7 @@ const InspectionSchema = new Mongoose.Schema({
 	},
 	inspection_number: Number,
 	scheduled: {
-		type: Date,
+		type: Number,
 		default: Date.now
 	},
 	date: String,
@@ -38,6 +38,22 @@ const InspectionSchema = new Mongoose.Schema({
 	inspector: {
 		type: String,
 		ref: "Inspector"
+	},
+	agreement: {
+		signed: Boolean,
+		timestamp: Number,
+		ip: String,
+		signature: String
+	},
+	payment: {
+		initial: Number,
+		balance: Number,
+		timestamp: Number,
+		transaction: String
+	},
+	report: {
+		sent: Boolean,
+		timestamp: Number
 	},
 	status: {
 		type: String,

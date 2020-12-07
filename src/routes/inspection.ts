@@ -6,11 +6,11 @@ import Util from "@classes/util";
 
 const InspectionRouter = Router();
 
-InspectionRouter.get("/general_info", restrictAuthorization, async (req: Request, res: Response) => {
+InspectionRouter.get("/info", restrictAuthorization, async (req: Request, res: Response) => {
 	try {
 		const inspector = await Util.resolveInspector(res.locals.auth.id);
-		const inspection = await Util.resolveInspection(req.query.id);
-		const data = await Inspection.getGeneralInfo(inspection);
+		const inspection = await Util.resolveInspection(<string>req.query.id);
+		const data = await Inspection.getInfo(inspection);
 
 		res.json({
 			status: 200,

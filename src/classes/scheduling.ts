@@ -124,7 +124,7 @@ export class Scheduler {
 				let inspectorName: string = inspector.first_name + " " + inspector.last_name;
 				let weekday = dateMoment.format("dddd").toLowerCase();
 				let timeoffs = Inspector.getTimeoff(inspector);
-				let inspections = await Inspector.getInspections(inspector, start, end);
+				let inspections = await Inspector.getInspections(inspector);
 
 				for (let timeslot of inspector.timeslots[weekday]) {
 					let blockedoff = false;
@@ -300,11 +300,12 @@ export class Scheduler {
 		
 		let weekday = moment(date).format("dddd").toLowerCase();
 		let timeoffs = Inspector.getTimeoff(inspector);
-		let inspections = await Inspector.getInspections(inspector, date, date);
+		await inspector.populate("inspections").execPopulate();
+		let overlappingInspection = await inspector.get("inspections").exists({ date, time });
 
 		return inspector.timeslots[weekday].includes(time) &&
 			   timeoffs.find((timeoff: {date: string, time: number}) => timeoff.date == date && timeoff.time == time) === undefined &&
-			   inspections.find((inspection: {date: string, time: number}) => inspection.date == date && inspection.time == time) === undefined;
+			   !overlappingInspection;
 	}
 
 	/**

@@ -23,21 +23,8 @@ export class Inspector {
     /**
 	 * Gets the inspections between a date range
 	 * @param inspector the inspector document
-	 * @param start the starting datestamp
-	 * @param end the ending datestamp
 	 */
-    public static async getInspections(inspector: Document, start: string, end: string) {
-        let startMoment = moment(start, "YYYYMMDD", true);
-		let endMoment = moment(end, "YYYYMMDD", true);
-
-		if (!startMoment.isValid()) {
-			throw new InvalidParameterException("Invalid start date");
-		}
-
-		if (!endMoment.isValid()) {
-			throw new InvalidParameterException("Invalid end date");
-        }
-
+    public static async getInspections(inspector: Document) {
 		await inspector.populate({
             path: "inspections",
             populate: { path: "client1 client2 realtor" }
@@ -56,7 +43,21 @@ export class Inspector {
                 date: inspection.date,
                 time: inspection.time,
                 client: `${client1Name}${client2Name ? (" & " + client2Name) : ""}`,
-                realtor: realtorName
+				realtor: realtorName,
+				status: inspection.status,
+				agreement: {
+					signed: inspection.agreement.signed,
+					timestamp: inspection.agreement.signed ? inspection.agreement.timestamp : undefined
+				},
+				payment: {
+					balance: inspection.payment.balance,
+					timestamp: inspection.payment.balance == 0 ? inspection.payment.timestamp : undefined
+				},
+				report: {
+					sent: inspection.report.sent,
+					timestamp: inspection.report.sent ? inspection.report.timestamp : undefined
+				},
+				image: "https://photos.zillowstatic.com/cc_ft_768/ISni89iuad9ntt1000000000.webp"
             });
         }
         
