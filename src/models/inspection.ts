@@ -20,9 +20,10 @@ const InspectionSchema = new Mongoose.Schema({
 		state: String,
 		zip: Number,
 		sqft: Number,
-		age: Number,
+		year_built: Number,
 		foundation: String
 	},
+	services: [String],
 	client1: {
 		type: String,
 		ref: "Client"
@@ -40,13 +41,14 @@ const InspectionSchema = new Mongoose.Schema({
 		ref: "Inspector"
 	},
 	agreement: {
+		sent: Boolean,
 		signed: Boolean,
 		timestamp: Number,
 		ip: String,
 		signature: String
 	},
 	payment: {
-		initial: Number,
+		invoiced: Number,
 		balance: Number,
 		timestamp: Number,
 		transaction: String

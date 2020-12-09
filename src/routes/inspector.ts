@@ -36,7 +36,7 @@ InspectorRouter.get("/timeslots", restrictAuthorization, restrictNonInspectors, 
 InspectorRouter.post("/timeslots", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
 	try {
 		const inspector = await Util.resolveInspector(res.locals.auth.id);
-		const success = Inspector.addTimeslot(inspector, req.body.day, parseInt(req.body.time));
+		const success = await Inspector.addTimeslot(inspector, req.body.day, parseInt(req.body.time));
 		
 		res.status(200).json({ status: 200 });
 	} catch (e) {
@@ -47,7 +47,7 @@ InspectorRouter.post("/timeslots", restrictAuthorization, restrictNonInspectors,
 InspectorRouter.delete("/timeslots/:day/:time", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
 	try {
 		const inspector = await Util.resolveInspector(res.locals.auth.id);
-		const success = Inspector.removeTimeslot(inspector, req.params.day, parseInt(req.params.time));
+		const success = await Inspector.removeTimeslot(inspector, req.params.day, parseInt(req.params.time));
 
 		res.status(200).json({ status: 200 });
 	} catch (e) {
@@ -72,7 +72,7 @@ InspectorRouter.get("/timeoff", restrictAuthorization, restrictNonInspectors, as
 InspectorRouter.post("/timeoff", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
 	try {
 		const inspector = await Util.resolveInspector(res.locals.auth.id);
-		const success = Inspector.addTimeoff(inspector, req.body.date, req.body.time);
+		const success = await Inspector.addTimeoff(inspector, req.body.date, req.body.time);
 
 		res.status(200).json({ status: 200 });
 	} catch (e) {
@@ -83,7 +83,7 @@ InspectorRouter.post("/timeoff", restrictAuthorization, restrictNonInspectors, a
 InspectorRouter.delete("/timeoff/:date/:time", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
 	try {
 		const inspector = await Util.resolveInspector(res.locals.auth.id);
-		const success = Inspector.removeTimeoff(inspector, req.params.date, parseInt(req.params.time));
+		const success = await Inspector.removeTimeoff(inspector, req.params.date, parseInt(req.params.time));
 
 		res.status(200).json({ status: 200 });
 	} catch (e) {

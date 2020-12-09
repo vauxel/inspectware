@@ -88,7 +88,7 @@ export class Inspector {
 	 * @param time the 24hr time of the timeslot in minutes since midnight
 	 * @returns whether the add operation was successful
 	 */
-	public static addTimeslot(inspector: Document, day: string, time: number): boolean {
+	public static async addTimeslot(inspector: Document, day: string, time: number) {
 		if (
 			day != "monday" &&
 			day != "tuesday" &&
@@ -112,7 +112,7 @@ export class Inspector {
 
 		timeslots.push(time);
 		inspector.set(`timeslots.${day}`, timeslots.sort((a, b) => a - b));
-		inspector.save();
+		await inspector.save();
 		return true;
 	}
 
@@ -121,9 +121,9 @@ export class Inspector {
 	 * @param inspector the inspector document
 	 * @param day the day of the week of the timeslot
 	 * @param time the 24hr time of the timeslot in minutes since midnight
-	 * @returns whether the remove operation was successful
+	 * @returns whether the add operation was successful
 	 */
-	public static removeTimeslot(inspector: Document, day: string, time: number): boolean {
+	public static async removeTimeslot(inspector: Document, day: string, time: number) {
 		if (
 			day != "monday" &&
 			day != "tuesday" &&
@@ -148,7 +148,7 @@ export class Inspector {
 
 		timeslots.splice(index, 1);
 		inspector.set(`timeslots.${day}`, timeslots);
-		inspector.save();
+		await inspector.save();
 		return true;
 	}
 
@@ -169,7 +169,7 @@ export class Inspector {
 	 * @param time the 24hr time in minutes since midnight
 	 * @returns whether the add operation was successful
 	 */
-	public static addTimeoff(inspector: Document, date: string, time: number): boolean {
+	public static async addTimeoff(inspector: Document, date: string, time: number) {
 		let dateMoment: moment.Moment = moment(date, "YYYYMMDD");
 
 		if (!dateMoment.isValid()) {
@@ -187,7 +187,7 @@ export class Inspector {
 
 		timeoff.push({ date, time });
 		inspector.set("timeoff", timeoff);
-		inspector.save();
+		await inspector.save();
 		return true;
 	}
 
@@ -196,9 +196,9 @@ export class Inspector {
 	 * @param inspector the inspector document
 	 * @param date the date in ISO format (year-month-day)
 	 * @param time the 24hr time in minutes since midnight
-	 * @returns whether the remove operation was successful
+	 * @returns whether the add operation was successful
 	 */
-	public static removeTimeoff(inspector: Document, date: string, time: number): boolean {
+	public static async removeTimeoff(inspector: Document, date: string, time: number) {
 		let dateMoment: moment.Moment = moment(date, "YYYYMMDD");
 
 		if (!dateMoment.isValid()) {
@@ -217,7 +217,7 @@ export class Inspector {
 
 		timeoff.splice(index, 1);
 		inspector.set("timeoff", timeoff);
-		inspector.save();
+		await inspector.save();
 		return true;
 	}
 }

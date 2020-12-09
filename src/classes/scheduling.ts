@@ -7,6 +7,7 @@ import InspectionModel from "@models/inspection";
 import ClientModel from "@models/client";
 import RealtorModel from "@models/realtor";
 import InspectorModel from "@models/inspector";
+import config from "@root/conf.json";
 
 /**
  * Interface for scheduler property data
@@ -18,7 +19,7 @@ interface PropertyData {
 	state: string,
 	zip: number,
 	sqft: number,
-	age: number,
+	year_built: number,
 	foundation: string
 }
 
@@ -182,10 +183,10 @@ export class Scheduler {
 	 * @param account the account document
 	 * @param services an array of service short names
 	 * @param sqft the square footage of the house
-	 * @param age the age of the house
+	 * @param year_built the year the house was built
 	 * @param foundation the foundation type of the house
 	 */
-	public static async calculatePricing(account: Document, services: string[], sqft: number, age: number, foundation: string) {
+	public static async calculatePricing(account: Document, services: string[], sqft: number, year_built: number, foundation: string) {
 		if (!services || services.length === 0) {
 			throw new InvalidParameterException("Invalid services");
 		}
@@ -194,8 +195,8 @@ export class Scheduler {
 			throw new InvalidParameterException("Invalid square footage");
 		}
 
-		if (!age) {
-			throw new InvalidParameterException("Invalid house age");
+		if (!year_built) {
+			throw new InvalidParameterException("Invalid house built year");
 		}
 
 		if (!foundation || (foundation !== "basement" && foundation !== "slab" && foundation !== "crawlspace")) {
@@ -227,10 +228,11 @@ export class Scheduler {
 		}
 
 		if (servicesIncludesFull && account.get("age_pricing").enabled) {
+			let age = new Date().getFullYear() - year_built;
 			let price = this.calculateTieredPrice(account.get("age_pricing").ranges, age);
 
 			invoiceItems.push({
-				name: "House Age: " + age + " yrs",
+				name: "House Age: " + age + " yrs (" + year_built + ")",
 				price: price
 			});
 
@@ -300,12 +302,11 @@ export class Scheduler {
 		
 		let weekday = moment(date).format("dddd").toLowerCase();
 		let timeoffs = Inspector.getTimeoff(inspector);
-		await inspector.populate("inspections").execPopulate();
-		let overlappingInspection = await inspector.get("inspections").exists({ date, time });
+		await inspector.populate({ path: "inspections", match: { date: { $eq: date }, time: { $eq: time } } }).execPopulate();
 
 		return inspector.timeslots[weekday].includes(time) &&
 			   timeoffs.find((timeoff: {date: string, time: number}) => timeoff.date == date && timeoff.time == time) === undefined &&
-			   !overlappingInspection;
+			   inspector.inspections.length == 0;
 	}
 
 	/**
@@ -471,13 +472,17 @@ export class Scheduler {
 				state: property.state,
 				zip: property.zip,
 				sqft: property.sqft,
-				age: property.age,
+				year_built: property.year_built,
 				foundation: property.foundation
 			},
+			services: services,
 			client1: client1Document,
 			client2: client2Document,
 			realtor: realtorDocument,
-			inspector: inspector
+			inspector: inspector,
+			agreement: {
+				sent: false
+			}
 		});
 
 		await inspection.save();
@@ -519,7 +524,7 @@ export class Scheduler {
 		// TODO: Send emails to realtor and clients
 	}
 
-	private static validateServicesData(account: Document, services: string[]) {
+	public static validateServicesData(account: Document, services: string[]) {
 		if (services.length == 0) {
 			throw new InvalidParameterException("No services");
 		}
@@ -548,12 +553,16 @@ export class Scheduler {
 		}
 	}
 
-	private static validatePropertyData(property: PropertyData) {
-		if (!property.address1 || property.address1.length === 0) {
+	public static validatePropertyData(property: PropertyData) {
+		if (!property.address1 || property.address1.length === 0 || property.address1.length > config.validation.property.address.max_length) {
 			throw new InvalidParameterException("Invalid property address 1");
 		}
 
-		if (!property.city || property.city.length === 0 || !(/^[a-zA-Z',.\s-]{1,25}$/.test(property.city))) {
+		if (!!property.address2 && property.address2.length > config.validation.property.address.max_length) {
+			throw new InvalidParameterException("Invalid property address 2");
+		}
+
+		if (!property.city || property.city.length === 0 || property.city.length > config.validation.property.city.max_length || !(/^[a-zA-Z',.\s-]+$/.test(property.city))) {
 			throw new InvalidParameterException("Invalid property city");
 		}
 
@@ -565,12 +574,12 @@ export class Scheduler {
 			throw new InvalidParameterException("Invalid property zip");
 		}
 
-		if (!property.sqft || property.sqft <= 0 || property.sqft > 999999) {
+		if (!property.sqft || property.sqft <= 0 || property.sqft > config.validation.property.sqft.max) {
 			throw new InvalidParameterException("Invalid property sqft");
 		}
 
-		if (!property.age || property.age < 0 || property.age > 999) {
-			throw new InvalidParameterException("Invalid property age");
+		if (!property.year_built || property.year_built < config.validation.property.year_built.min || property.year_built > new Date().getFullYear()) {
+			throw new InvalidParameterException("Invalid property built year");
 		}
 
 		if ((!property.foundation || property.foundation.length === 0) || (property.foundation !== "slab" && property.foundation !== "crawlspace" && property.foundation !== "basement")) {
@@ -578,7 +587,7 @@ export class Scheduler {
 		}
 	}
 
-	private static async validateAppointmentData(account: Document, appointment: AppointmentData) {
+	public static async validateAppointmentData(account: Document, appointment: AppointmentData) {
 		let date = moment(appointment.date, "YYYYMMDD", true);
 
 		if (!date.isValid()) {
@@ -606,16 +615,16 @@ export class Scheduler {
 		}
 	}
 
-	private static validateClientData(client: ClientData) {
-		if ((!client.firstName || client.firstName.length === 0) || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(client.firstName))) {
+	public static validateClientData(client: ClientData) {
+		if ((!client.firstName || client.firstName.length === 0) || client.firstName.length > config.validation.user.name.max_length || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(client.firstName))) {
 			throw new InvalidParameterException("Invalid client first name");
 		}
 
-		if ((!client.lastName || client.lastName.length === 0) || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(client.lastName))) {
+		if ((!client.lastName || client.lastName.length === 0) || client.lastName.length > config.validation.user.name.max_length || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(client.lastName))) {
 			throw new InvalidParameterException("Invalid client last name");
 		}
 
-		if ((!client.email || client.email.length === 0) || !(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(client.email))) {
+		if ((!client.email || client.email.length === 0) || client.email.length > config.validation.user.email.max_length || !(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(client.email))) {
 			throw new InvalidParameterException("Invalid client email");
 		}
 
@@ -629,11 +638,11 @@ export class Scheduler {
 			throw new InvalidParameterException("Invalid client address");
 		}*/
 
-		if (checkAddress && (!client.address || client.address.length === 0)) {
+		if (checkAddress && (!client.address || client.address.length === 0 || client.address.length > config.validation.property.address.max_length)) {
 			throw new InvalidParameterException("Invalid client address");
 		}
 
-		if (checkAddress && !(/^[a-zA-Z',.\s-]{1,25}$/.test(client.city))) {
+		if (checkAddress && (client.city.length > config.validation.property.city.max_length || !(/^[a-zA-Z',.\s-]+$/.test(client.city)))) {
 			throw new InvalidParameterException("Invalid client city");
 		}
 
@@ -646,18 +655,18 @@ export class Scheduler {
 		}
 	}
 
-	private static validateRealtorData(realtor: RealtorData) {
-		if (!realtor.firstName || realtor.firstName.length === 0 || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(realtor.firstName))) {
+	public static validateRealtorData(realtor: RealtorData) {
+		if (!realtor.firstName || realtor.firstName.length === 0 || realtor.firstName.length > config.validation.user.name.max_length || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(realtor.firstName))) {
 			throw new InvalidParameterException("Invalid realtor first name");
 		}
 
-		if (!realtor.lastName || realtor.lastName.length === 0 || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(realtor.lastName))) {
+		if (!realtor.lastName || realtor.lastName.length === 0 || realtor.lastName.length > config.validation.user.name.max_length || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(realtor.lastName))) {
 			throw new InvalidParameterException("Invalid realtor last name");
 		}
 
 		// Affiliation checking skipped
 
-		if (!realtor.email || realtor.email.length === 0 || !(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(realtor.email))) {
+		if (!realtor.email || realtor.email.length === 0 || realtor.email.length > config.validation.user.email.max_length || !(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(realtor.email))) {
 			throw new InvalidParameterException("Invalid realtor email");
 		}
 
@@ -691,11 +700,11 @@ export class Scheduler {
 			throw new InvalidParameterException("Invalid realtor address");
 		}*/
 
-		if (checkAddress && (!realtor.address || realtor.address.length === 0)) {
+		if (checkAddress && (!realtor.address || realtor.address.length === 0 || realtor.address.length > config.validation.property.address.max_length)) {
 			throw new InvalidParameterException("Invalid realtor address");
 		}
 
-		if (checkAddress && !(/^[a-zA-Z',.\s-]{1,25}$/.test(realtor.city))) {
+		if (checkAddress && (realtor.city.length > config.validation.property.city.max_length || !(/^[a-zA-Z',.\s-]{1,25}$/.test(realtor.city)))) {
 			throw new InvalidParameterException("Invalid realtor city");
 		}
 

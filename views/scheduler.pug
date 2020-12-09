@@ -73,8 +73,8 @@ html
 									i-input(v-model="property.zip" @on-blur="resolvePropertyAddress" placeholder="Enter the digit zip code" v-mask="'#####'")
 								form-item(label="Square Footage" prop="sqft")
 									i-input(v-model="property.sqft" placeholder="Enter the whole-number square footage" v-mask="'######'")
-								form-item(label="Age of Home" prop="age")
-									i-input(v-model="property.age" placeholder="Enter the age of the home" v-mask="'###'")
+								form-item(label="Year Built" prop="year_built")
+									i-input(v-model="property.year_built" placeholder="Enter the year the home was built" v-mask="'####'")
 								form-item(label="Foundation Type" prop="foundation")
 									i-select(v-model="property.foundation" placeholder="Choose the foundation type")
 										i-option(value="slab") Slab
@@ -251,8 +251,8 @@ html
 							.sidebar-key Square Footage
 							.sidebar-value {{ property.sqft }}
 						.sidebar-pair
-							.sidebar-key Age of Home
-							.sidebar-value {{ property.age }}
+							.sidebar-key Year Built
+							.sidebar-value {{ property.year_built }}
 						.sidebar-pair
 							.sidebar-key Foundation Type
 							.sidebar-value {{ property.foundation }}
@@ -367,7 +367,7 @@ html
 					state: "",
 					zip: "",
 					sqft: "",
-					age: "",
+					year_built: "",
 					foundation: ""
 				},
 				propertyAddressMatches: [],
@@ -379,7 +379,7 @@ html
 					state: [{ required: true, message: "The state cannot be blank", trigger: "change" }],
 					zip: [{ required: true, message: "The zip code cannot be blank", trigger: "blur" }],
 					sqft: [{ required: true, message: "The square footage cannot be blank", trigger: "blur" }],
-					age: [{ required: true, message: "The age of the home cannot be blank", trigger: "blur" }],
+					year_built: [{ required: true, message: "The built year of the home cannot be blank", trigger: "blur" }],
 					foundation: [{ required: true, message: "The foundation type cannot be blank", trigger: "change" }]
 				},
 				propertyMap: undefined,
@@ -668,11 +668,11 @@ html
 						callback();
 					}
 				},
-				ageValidator: (rule, value, callback) => {
+				yearBuiltValidator: (rule, value, callback) => {
 					if (value === "") {
-						callback(new Error("The age of the home cannot be blank!"));
+						callback(new Error("The year built of the home cannot be blank!"));
 					} else if (!Number.isInteger(value) && value > 0) {
-						callback(new Error("Please enter a valid age"));
+						callback(new Error("Please enter a valid year"));
 					} else {
 						callback();
 					}
@@ -869,7 +869,7 @@ html
 					let services = this.services.slice(0);
 					services.push(this.mainService);
 
-					const url = `${apiURL}/api/scheduling/pricing?account=${accountId}&services=${services.join("|")}&sqft=${this.property.sqft}&age=${this.property.age}&foundation=${this.property.foundation}`;
+					const url = `${apiURL}/api/scheduling/pricing?account=${accountId}&services=${services.join("|")}&sqft=${this.property.sqft}&year_built=${this.property.year_built}&foundation=${this.property.foundation}`;
 
 					req.open("GET", url);
 					req.send();

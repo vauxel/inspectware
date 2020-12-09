@@ -25,7 +25,7 @@ SchedulingRouter.get("/pricing", async (req: Request, res: Response) => {
 			account,
 			(<any>req.query.services) ? (<any>req.query.services).split("|") : undefined,
 			parseInt(<string>req.query.sqft),
-			parseInt(<string>req.query.age),
+			parseInt(<string>req.query.year_built),
 			<string>req.query.foundation
 		);
 
