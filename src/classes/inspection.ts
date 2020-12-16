@@ -1,6 +1,9 @@
+import { InvalidParameterException, InvalidOperationException } from "@classes/exceptions";
 import { Document } from "mongoose";
 import AccountModel from "@models/account";
 import { Scheduler } from "@classes/scheduling";
+import { IDocument } from "@classes/document";
+import RuntimeException from './exception';
 
 /**
  * Manages inspection functionalities
@@ -29,6 +32,11 @@ export class Inspection {
 		await inspection.populate("client1 client2 realtor inspector").execPopulate();
 
 		let parsedServices: string[] = [];
+		let account = await AccountModel.findById(inspection.get("account"));
+
+		if (account === null) {
+			throw new RuntimeException("Inspection document is malformed");
+		}
 
 		for (let serviceName of inspection.get("services")) {
 			if (serviceName == "full") {
@@ -36,7 +44,7 @@ export class Inspection {
 			} else if (serviceName == "pre") {
 				parsedServices.push("Pre-Drywall Inspection");
 			} else {
-				parsedServices.push(AccountModel.findById(inspection.get("inspector").account).get("services").find((service: {short_name: string}) => service.short_name === serviceName));
+				parsedServices.push(account.get("services").find((service: {short_name: string}) => service.short_name === serviceName));
 			}
 		}
 
@@ -64,7 +72,8 @@ export class Inspection {
 			} : null),
 			date: inspection.get("date"),
 			time: inspection.get("time"),
-			scheduled: inspection.get("scheduled")
+			scheduled: inspection.get("scheduled"),
+			details_locked: inspection.get("details_locked")
 		};
 	}
 
@@ -128,5 +137,81 @@ export class Inspection {
 		inspection.set("property", property);
 		await inspection.save();
 		return true;
+	}
+
+	/**
+	 * Gets pricing & payment information for an inspection
+	 * @param inspection the inspection document
+	 */
+	public static async getPaymentInfo(inspection: Document) {
+		let account = await AccountModel.findById(inspection.get("account"));
+
+		if (account === null) {
+			throw new RuntimeException("Inspection document is malformed");
+		}
+
+		let pricing = !inspection.get("payment").invoice_sent ? Scheduler.calculatePricing(
+			account,
+			inspection.get("services"),
+			inspection.get("property").sqft,
+			inspection.get("property").year_built,
+			inspection.get("property").foundation
+		) : {
+			items: inspection.get("payment").details.items,
+			subtotal: inspection.get("payment").details.subtotal,
+			tax: inspection.get("payment").details.tax,
+			tax_percent: inspection.get("payment").details.tax_percent,
+			total: inspection.get("payment").details.total
+		};
+
+		return {
+			invoice_sent: inspection.get("payment").invoice_sent,
+			invoiced: inspection.get("payment").invoiced,
+			balance: inspection.get("payment").balance,
+			payments: inspection.get("payment").payments,
+			details: pricing
+		}
+	}
+
+	/**
+	 * Generates and sends a payment invoice to the client(s)
+	 * @param inspection the inspection document
+	 */
+	public static async generateSendInvoice(inspection: Document) {
+		if (inspection.get("payment").invoice_sent === true) {
+			throw new InvalidOperationException("Invoice has already been sent");
+		}
+
+		let account = await AccountModel.findById(inspection.get("account"));
+
+		if (account === null) {
+			throw new RuntimeException("Inspection document is malformed");
+		}
+
+		let idocument = await IDocument.generateInvoice(inspection);
+
+		/* TO-DO: send email */
+
+		let pricing = Scheduler.calculatePricing(
+			account,
+			inspection.get("services"),
+			inspection.get("property").sqft,
+			inspection.get("property").year_built,
+			inspection.get("property").foundation
+		);
+
+		inspection.set("details_locked", true);
+		inspection.set("payment.invoice_sent", true);
+		inspection.set("payment.doc", idocument.id);
+		inspection.set("payment.invoiced", pricing.total);
+		inspection.set("payment.balance", pricing.total);
+		inspection.set("payment.details.items", pricing.items);
+		inspection.set("payment.details.subtotal", pricing.subtotal);
+		inspection.set("payment.details.tax", pricing.tax);
+		inspection.set("payment.details.tax_percent", pricing.tax_percent);
+		inspection.set("payment.details.total", pricing.total);
+		await inspection.save();
+
+		return await this.getPaymentInfo(inspection);
 	}
 }

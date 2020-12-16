@@ -6,6 +6,7 @@ import Inspector from "@models/inspector";
 import Client from "@models/client";
 import Realtor from "@models/realtor";
 import Inspection from "@models/inspection";
+import IDocument from "@models/document";
 import generate from "nanoid/generate";
 import config from "@root/conf.json";
 
@@ -106,6 +107,25 @@ export default class Util {
 		}
 
 		return inspection;
+	}
+
+	/**
+	 * Resolves an inspection-document id to an inspection-document document
+	 * @param idocumentId the inspection-document id
+	 */
+	public static async resolveIDocument(idocumentId: string) {
+		let idocument;
+		try {
+			idocument = await IDocument.findById(idocumentId);
+		} catch (e) {
+			throw new RuntimeException("Database error: " + e.message);
+		}
+
+		if (!idocument) {
+			throw new InvalidParameterException("An inspection-document by that id does not exist");
+		}
+
+		return idocument;
 	}
 
 	/**

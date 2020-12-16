@@ -186,7 +186,7 @@ export class Scheduler {
 	 * @param year_built the year the house was built
 	 * @param foundation the foundation type of the house
 	 */
-	public static async calculatePricing(account: Document, services: string[], sqft: number, year_built: number, foundation: string) {
+	public static calculatePricing(account: Document, services: string[], sqft: number, year_built: number, foundation: string) {
 		if (!services || services.length === 0) {
 			throw new InvalidParameterException("Invalid services");
 		}
@@ -463,6 +463,7 @@ export class Scheduler {
 
 		const inspection = new InspectionModel({
 			inspection_number: account.get("inspection_counter"),
+			account: account.id,
 			date: appointment.date,
 			time: appointment.time,
 			property: {
@@ -479,10 +480,7 @@ export class Scheduler {
 			client1: client1Document,
 			client2: client2Document,
 			realtor: realtorDocument,
-			inspector: inspector,
-			agreement: {
-				sent: false
-			}
+			inspector: inspector
 		});
 
 		await inspection.save();

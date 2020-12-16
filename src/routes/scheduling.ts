@@ -21,7 +21,7 @@ SchedulingRouter.get("/services", async (req: Request, res: Response) => {
 SchedulingRouter.get("/pricing", async (req: Request, res: Response) => {
 	try {
 		const account = await Util.resolveAccount(<string>req.query.account);
-		const data = await Scheduler.calculatePricing(
+		const data = Scheduler.calculatePricing(
 			account,
 			(<any>req.query.services) ? (<any>req.query.services).split("|") : undefined,
 			parseInt(<string>req.query.sqft),

@@ -21,6 +21,21 @@ InspectionRouter.get("/info", restrictAuthorization, async (req: Request, res: R
 	}
 });
 
+InspectionRouter.get("/payment_info", restrictAuthorization, async (req: Request, res: Response) => {
+	try {
+		const inspector = await Util.resolveInspector(res.locals.auth.id);
+		const inspection = await Util.resolveInspection(<string>req.query.id);
+		const data = await Inspection.getPaymentInfo(inspection);
+
+		res.json({
+			status: 200,
+			data
+		});
+	} catch (e) {
+		Util.handleError(e, res);
+	}
+});
+
 InspectionRouter.post("/property_info", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
 	try {
 		const inspector = await Util.resolveInspector(res.locals.auth.id);
@@ -38,6 +53,21 @@ InspectionRouter.post("/property_info", restrictAuthorization, restrictNonInspec
 		);
 		
 		res.status(200).json({ status: 200 });
+	} catch (e) {
+		Util.handleError(e, res);
+	}
+});
+
+InspectionRouter.post("/gen_invoice", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
+	try {
+		const inspector = await Util.resolveInspector(res.locals.auth.id);
+		const inspection = await Util.resolveInspection(req.body.id);
+		const data = await Inspection.generateSendInvoice(inspection);
+		
+		res.status(200).json({
+			status: 200,
+			data
+		});
 	} catch (e) {
 		Util.handleError(e, res);
 	}

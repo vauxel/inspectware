@@ -11,6 +11,10 @@ const InspectionSchema = new Mongoose.Schema({
 		type: Number,
 		default: Date.now
 	},
+	account: {
+		type: String,
+		ref: "Account"
+	},
 	date: String,
 	time: Number,
 	property: {
@@ -40,22 +44,65 @@ const InspectionSchema = new Mongoose.Schema({
 		type: String,
 		ref: "Inspector"
 	},
+	details_locked: {
+		type: Boolean,
+		default: false
+	},
 	agreement: {
-		sent: Boolean,
+		sent: {
+			type: Boolean,
+			default: false
+		},
 		signed: Boolean,
 		timestamp: Number,
 		ip: String,
-		signature: String
+		signature: String,
+		doc: {
+			type: String,
+			ref: "IDocument"
+		}
 	},
 	payment: {
+		invoice_sent: {
+			type: Boolean,
+			default: false
+		},
+		doc: {
+			type: String,
+			ref: "IDocument"
+		},
 		invoiced: Number,
 		balance: Number,
-		timestamp: Number,
-		transaction: String
+		payments: [{
+			timestamp: Number,
+			transaction: String,
+			amount: Number,
+			method: {
+				type: String,
+				enum: [
+					"MANUAL",
+					"STRIPE"
+				],
+			}
+		}],
+		details: {
+			items: [{
+				name: String,
+				price: Number
+			}],
+			subtotal: Number,
+			tax: Number,
+			tax_percent: Number,
+			total: Number
+		}
 	},
 	report: {
 		sent: Boolean,
-		timestamp: Number
+		timestamp: Number,
+		doc: {
+			type: String,
+			ref: "IDocument"
+		}
 	},
 	status: {
 		type: String,

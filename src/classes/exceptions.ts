@@ -38,3 +38,16 @@ export class InvalidOperationException extends RuntimeException {
 		return 409;
 	}
 };
+
+/**
+ * Exception thrown when the requested operation is restricted
+ */
+export class UnauthorizedException extends RuntimeException {
+	public get getName(): string {
+		return "UnauthorizedException";
+	}
+
+	public get getHTTPStatus(): number {
+		return 401;
+	}
+};
