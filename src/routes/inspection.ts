@@ -36,6 +36,21 @@ InspectionRouter.get("/payment_info", restrictAuthorization, async (req: Request
 	}
 });
 
+InspectionRouter.get("/documents", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
+	try {
+		const inspector = await Util.resolveInspector(res.locals.auth.id);
+		const inspection = await Util.resolveInspection(<string>req.query.id);
+		const data = await Inspection.getDocuments(inspection, inspector);
+
+		res.json({
+			status: 200,
+			data
+		});
+	} catch (e) {
+		Util.handleError(e, res);
+	}
+});
+
 InspectionRouter.post("/property_info", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
 	try {
 		const inspector = await Util.resolveInspector(res.locals.auth.id);

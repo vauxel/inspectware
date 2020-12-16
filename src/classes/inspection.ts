@@ -1,6 +1,7 @@
 import { InvalidParameterException, InvalidOperationException } from "@classes/exceptions";
 import { Document } from "mongoose";
 import AccountModel from "@models/account";
+import IDocumentModel from "@models/document";
 import { Scheduler } from "@classes/scheduling";
 import { IDocument } from "@classes/document";
 import RuntimeException from './exception';
@@ -213,5 +214,36 @@ export class Inspection {
 		await inspection.save();
 
 		return await this.getPaymentInfo(inspection);
+	}
+
+	/**
+	 * Retrieves all the documents associated with the inspection
+	 * @param inspection the inspection document
+	 */
+	public static async getDocuments(inspection: Document, requester: Document) {
+		let idocuments = await IDocumentModel.find({ inspection: inspection.id }).exec();
+		let data = [];
+		
+		for (let idocument of idocuments) {
+			if (idocument.get("doctype") === "REPORT") {
+				continue;
+			}
+
+			let authorization = idocument.get("authorizations").find((auth: any) => auth.userid === requester.id);
+
+			if (authorization === undefined) {
+				continue;
+			}
+
+			data.push({
+				id: idocument.id,
+				doctype: idocument.get("doctype"),
+				name: idocument.get("name"),
+				created: idocument.get("created"),
+				token: authorization.token
+			});
+		}
+
+		return data;
 	}
 }
