@@ -19,6 +19,7 @@ import authRouter from "@routes/auth";
 import schedulingRouter from "@routes/scheduling";
 import inspectorRouter from "@routes/inspector";
 import inspectionRouter from "@routes/inspection";
+import accountRouter from "@routes/account";
 import docRouter from "@routes/document";
 
 mongoose.connect("mongodb://localhost:27017/inspectware", {useNewUrlParser: true});
@@ -45,6 +46,7 @@ server.use("/api/auth", authRouter);
 server.use("/api/scheduling", schedulingRouter);
 server.use("/api/inspector", inspectorRouter);
 server.use("/api/inspection", inspectionRouter);
+server.use("/api/account", accountRouter);
 server.use("/doc", docRouter);
 
 const dashboard = express();

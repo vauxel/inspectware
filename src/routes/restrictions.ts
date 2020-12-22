@@ -27,6 +27,15 @@ export function restrictAuthorization(req: Request, res: Response, next: any) {
 	}
 }
 
+export function restrictNonOwnerInspector(this: any, req: Request, res: Response, next: any) {
+	if (res.locals.auth.affiliation != "inspector" || res.locals.auth.isOwner === false) {
+		res.status(401);
+		return res.json({ status: 401, error: { message: "Unauthorized affiliation (owner inspector only)" } });
+	} else {
+		next();
+	}
+};
+
 export function restrictNonInspectors(this: any, req: Request, res: Response, next: any) {
 	if (res.locals.auth.affiliation != "inspector") {
 		res.status(401);

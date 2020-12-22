@@ -72,14 +72,16 @@ export default class Auth {
 	 * @param loginName the login name (email / username) of a user
 	 * @param name the full name of a user
 	 * @param accountId the account id of the user if they are an inspector
+	 * @param isOwner whether the inspector is the owner of the linked account
 	 */
-	public static createJWTPayload(affiliation: string, id: string, loginName: string, name: string, accountId?: string): object {
+	public static createJWTPayload(affiliation: string, id: string, loginName: string, name: string, accountId?: string, isOwner?: boolean): object {
 		return {
 			affiliation,
 			id,
 			loginName,
 			name,
-			accountId: accountId ? accountId : undefined
+			accountId: accountId ? accountId : undefined,
+			isOwner: isOwner ? isOwner : undefined
 		};
 	}
 
@@ -176,12 +178,25 @@ export default class Auth {
 			throw new InvalidLoginException("Invalid login credentials");
 		}
 
+		let isOwner = false;
+
+		if (affiliation === "inspector") {
+			let account = await Account.findById(user.get("account"));
+
+			if (!account) {
+				throw new RuntimeException("Malformed inspector document");
+			}
+
+			isOwner = account.get("owner") === user.id;
+		}
+
 		const token = this.generateJWT(this.createJWTPayload(
 			affiliation,
 			user.id,
 			user.get("email"),
 			user.get("first_name") + " " + user.get("last_name"),
-			affiliation === "inspector" ? user.get("account") : undefined
+			affiliation === "inspector" ? user.get("account") : undefined,
+			isOwner ? isOwner : undefined
 		));
 
 		return {
@@ -288,7 +303,8 @@ export default class Auth {
 				newInspector.id,
 				newInspector.get("email"),
 				newInspector.get("first_name") + " " + newInspector.get("last_name"),
-				newAccount.id
+				newAccount.id,
+				true
 			));
 
 			return {

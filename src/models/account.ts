@@ -1,5 +1,6 @@
 import Mongoose from "mongoose";
 import Util from "@classes/util";
+import DefaultData from "@classes/defaultdata";
 
 const AccountSchema = new Mongoose.Schema({
 	_id: {
@@ -140,6 +141,76 @@ const AccountSchema = new Mongoose.Schema({
 				price: 100
 			}
 		]
+	},
+	email_templates: {
+		header: {
+			type: String,
+			default: () => DefaultData.getEmailHeader()
+		},
+		footer: {
+			type: String,
+			default: () => DefaultData.getEmailFooter()
+		},
+		scheduled_client: {
+			subject: {
+				type: String,
+				default: () => DefaultData.getEmailScheduledClientSubject()
+			},
+			body: {
+				type: String,
+				default: () => DefaultData.getEmailScheduledClientBody()
+			}
+		},
+		scheduled_realtor: {
+			subject: {
+				type: String,
+				default: () => DefaultData.getEmailScheduledRealtorSubject()
+			},
+			body: {
+				type: String,
+				default: () => DefaultData.getEmailScheduledRealtorBody()
+			}
+		},
+		confirm_agreement: {
+			subject: {
+				type: String,
+				default: () => DefaultData.getEmailConfirmAgreementSubject()
+			},
+			body: {
+				type: String,
+				default: () => DefaultData.getEmailConfirmAgreementBody()
+			}
+		},
+		confirm_payment: {
+			subject: {
+				type: String,
+				default: () => DefaultData.getEmailConfirmPaymentSubject()
+			},
+			body: {
+				type: String,
+				default: () => DefaultData.getEmailConfirmPaymentBody()
+			}
+		},
+		report_client: {
+			subject: {
+				type: String,
+				default: () => DefaultData.getEmailReportClientSubject()
+			},
+			body: {
+				type: String,
+				default: () => DefaultData.getEmailReportClientBody()
+			}
+		},
+		report_realtor: {
+			subject: {
+				type: String,
+				default: () => DefaultData.getEmailReportRealtorSubject()
+			},
+			body: {
+				type: String,
+				default: () => DefaultData.getEmailReportRealtorBody()
+			}
+		}
 	}
 });
 

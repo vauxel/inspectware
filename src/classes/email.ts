@@ -1,5 +1,5 @@
 import RuntimeException from "@classes/exception";
-import { InvalidParameterException, SanitizationException, InvalidOperationException } from "@classes/exceptions";
+import { InvalidParameterException, InvalidOperationException } from "@classes/exceptions";
 import Nodemailer from "nodemailer";
 import config from "@root/conf.json";
 
