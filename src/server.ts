@@ -14,6 +14,15 @@ if (!process.argv.includes("-staticsecret")) {
 	console.log("! Auth using static, debugging secret !");
 }
 
+import { Email } from "./classes/email";
+
+Email.instantiateTransporter();
+Email.loadGenericTemplate();
+
+import { Templating } from "./classes/templating";
+
+Templating.configureEngine();
+
 import indexRouter from "@routes/index";
 import authRouter from "@routes/auth";
 import schedulingRouter from "@routes/scheduling";

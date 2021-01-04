@@ -39,6 +39,10 @@ const AccountSchema = new Mongoose.Schema({
 		type: Number,
 		default: 0
 	},
+	logo: String,
+	website_url: String,
+	phone: String,
+	email: String,
 	tax: {
 		type: Number,
 		default: 0.0
@@ -169,6 +173,16 @@ const AccountSchema = new Mongoose.Schema({
 			body: {
 				type: String,
 				default: () => DefaultData.getEmailScheduledRealtorBody()
+			}
+		},
+		notify_agreement: {
+			subject: {
+				type: String,
+				default: () => DefaultData.getEmailNotifyAgreementSubject()
+			},
+			body: {
+				type: String,
+				default: () => DefaultData.getEmailNotifyAgreementBody()
 			}
 		},
 		confirm_agreement: {

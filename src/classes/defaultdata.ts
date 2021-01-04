@@ -1,14 +1,14 @@
-import { existsSync, readFileSync } from "fs";
 import RuntimeException from "@classes/exception";
 import { InvalidParameterException } from "@classes/exceptions";
-import config from "@root/conf.json";
+import { existsSync, readFileSync } from "fs";
+import generalConf from "@root/conf/general.json";
 
 /**
  * Manages retrieving default data
  */
 export default class DefaultData {
     public static read(filename: string) {
-        let path = config.defaultdata_dir + "/" + filename + ".dat";
+        let path = generalConf.defaultdata_dir + "/" + filename + ".dat";
 
         if (!existsSync(path)) {
             throw new InvalidParameterException("Default data file does not exist");
@@ -17,7 +17,7 @@ export default class DefaultData {
         let data;
 
         try {
-            data = readFileSync(path);
+            data = readFileSync(path, "utf8");
         } catch (e) {
             throw new RuntimeException("Failed to retrieve default data file");
         }
@@ -47,6 +47,14 @@ export default class DefaultData {
 
     public static getEmailScheduledRealtorBody() {
         return this.read("email_scheduled_realtor_body");
+    }
+
+    public static getEmailNotifyAgreementSubject() {
+        return this.read("email_notify_agreement_subject");
+    }
+
+    public static getEmailNotifyAgreementBody() {
+        return this.read("email_notify_agreement_body");
     }
 
     public static getEmailConfirmAgreementSubject() {

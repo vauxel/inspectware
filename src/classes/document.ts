@@ -3,7 +3,7 @@ import { Document } from "mongoose";
 import moment from "moment";
 import IDocumentModel from "@models/document";
 import Util from "@classes/util";
-import config from "@root/conf.json";
+import generalConf from "@root/conf/general.json";
 
 /**
  * Manages inspector functionalities
@@ -33,7 +33,7 @@ export class IDocument {
 	 * Generates a unique token for document access
 	 */
 	private static generateToken(): string {
-		return Util.generateIdentifier(config.doc_token_generation.charset, config.doc_token_generation.length);
+		return Util.generateIdentifier(generalConf.doc_token_generation.charset, generalConf.doc_token_generation.length);
 	}
 
 	/**

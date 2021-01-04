@@ -8,7 +8,7 @@ import Realtor from "@models/realtor";
 import Inspection from "@models/inspection";
 import IDocument from "@models/document";
 import generate from "nanoid/generate";
-import config from "@root/conf.json";
+import generalConf from "@root/conf/general.json";
 
 /**
  * Utility class for common functions
@@ -145,7 +145,7 @@ export default class Util {
 	 * @param charset the optional charset
 	 * @param length the optional length
 	 */
-	public static generateIdentifier(charset = config.id_generation.charset, length = config.id_generation.length) {
+	public static generateIdentifier(charset = generalConf.id_generation.charset, length = generalConf.id_generation.length) {
 		return generate(charset, length);
 	}
 
@@ -155,7 +155,7 @@ export default class Util {
 	 * @param charset the optional charset
 	 * @param length the optional length
 	 */
-	public static isValidIdentifier(identifier: string, charset = config.id_generation.charset, length = config.id_generation.length) {
+	public static isValidIdentifier(identifier: string, charset = generalConf.id_generation.charset, length = generalConf.id_generation.length) {
 		return new RegExp(`^([${charset}]{${length}})$`).test(identifier);
 	}
 };

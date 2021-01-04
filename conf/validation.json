@@ -1,0 +1,32 @@
+{
+    "property": {
+        "address": {
+            "max_length": 48
+        },
+        "city": {
+            "max_length": 30
+        },
+        "sqft": {
+            "max": 999999
+        },
+        "year_built": {
+            "min": 1000
+        }
+    },
+    "user": {
+        "name": {
+            "max_length": 36
+        },
+        "email": {
+            "max_length": 254
+        }
+    },
+    "email": {
+        "subject": {
+            "max_length": 78
+        },
+        "body": {
+            "max_length": 64000
+        }
+    }
+}

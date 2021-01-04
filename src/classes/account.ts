@@ -1,9 +1,8 @@
 import { InvalidParameterException, InvalidOperationException } from "@classes/exceptions";
 import { Document } from "mongoose";
-import moment from "moment";
 import { Inspection } from "@classes/inspection";
-import Templating from "@classes/templating";
-import config from "@root/conf.json";
+import { Templating } from "@classes/templating";
+import validationConf from "@root/conf/validation.json";
 
 /**
  * Manages account functionalities
@@ -28,6 +27,12 @@ export class Account {
 				name: "Inspection Scheduled (Realtor)",
 				subject: templates.scheduled_realtor.subject,
 				body: templates.scheduled_realtor.body
+			},
+			{
+				id: "notify_agreement",
+				name: "Agreement Notification",
+				subject: templates.notify_agreement.subject,
+				body: templates.notify_agreement.body
 			},
 			{
 				id: "confirm_agreement",
@@ -74,11 +79,11 @@ export class Account {
 			throw new InvalidParameterException("Invalid template name");
 		}
 
-		if ((template !== "header" && template !== "footer") && (!subject || subject.length === 0 || subject.length > config.validation.email.subject.max_length)) {
+		if ((template !== "header" && template !== "footer") && (!subject || subject.length === 0 || subject.length > validationConf.email.subject.max_length)) {
 			throw new InvalidParameterException("Subject is either empty or too long");
 		}
 
-		if (!body || body.length === 0 || body.length > config.validation.email.body.max_length) {
+		if (!body || body.length === 0 || body.length > validationConf.email.body.max_length) {
 			throw new InvalidParameterException("Body is either empty or too long");
 		}
 

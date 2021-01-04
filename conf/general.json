@@ -1,0 +1,21 @@
+{
+    "static_dir": "static",
+    "defaultdata_dir": "default_data",
+    "id_generation": {
+        "charset": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "length": 10
+    },
+    "doc_token_generation": {
+        "charset": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+        "length": 16
+    },
+    "email": {
+        "template": "email_template_generic.html",
+        "host": "smtp.ethereal.email",
+        "port": 587,
+        "auth": {
+            "user": "maximilian79@ethereal.email",
+            "pass": "kPDFPMGSDHTN6z8Zww"
+        }
+    }
+}

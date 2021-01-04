@@ -7,7 +7,7 @@ import InspectionModel from "@models/inspection";
 import ClientModel from "@models/client";
 import RealtorModel from "@models/realtor";
 import InspectorModel from "@models/inspector";
-import config from "@root/conf.json";
+import validationConf from "@root/conf/validation.json";
 
 /**
  * Interface for scheduler property data
@@ -552,15 +552,15 @@ export class Scheduler {
 	}
 
 	public static validatePropertyData(property: PropertyData) {
-		if (!property.address1 || property.address1.length === 0 || property.address1.length > config.validation.property.address.max_length) {
+		if (!property.address1 || property.address1.length === 0 || property.address1.length > validationConf.property.address.max_length) {
 			throw new InvalidParameterException("Invalid property address 1");
 		}
 
-		if (!!property.address2 && property.address2.length > config.validation.property.address.max_length) {
+		if (!!property.address2 && property.address2.length > validationConf.property.address.max_length) {
 			throw new InvalidParameterException("Invalid property address 2");
 		}
 
-		if (!property.city || property.city.length === 0 || property.city.length > config.validation.property.city.max_length || !(/^[a-zA-Z',.\s-]+$/.test(property.city))) {
+		if (!property.city || property.city.length === 0 || property.city.length > validationConf.property.city.max_length || !(/^[a-zA-Z',.\s-]+$/.test(property.city))) {
 			throw new InvalidParameterException("Invalid property city");
 		}
 
@@ -572,11 +572,11 @@ export class Scheduler {
 			throw new InvalidParameterException("Invalid property zip");
 		}
 
-		if (!property.sqft || property.sqft <= 0 || property.sqft > config.validation.property.sqft.max) {
+		if (!property.sqft || property.sqft <= 0 || property.sqft > validationConf.property.sqft.max) {
 			throw new InvalidParameterException("Invalid property sqft");
 		}
 
-		if (!property.year_built || property.year_built < config.validation.property.year_built.min || property.year_built > new Date().getFullYear()) {
+		if (!property.year_built || property.year_built < validationConf.property.year_built.min || property.year_built > new Date().getFullYear()) {
 			throw new InvalidParameterException("Invalid property built year");
 		}
 
@@ -614,15 +614,15 @@ export class Scheduler {
 	}
 
 	public static validateClientData(client: ClientData) {
-		if ((!client.firstName || client.firstName.length === 0) || client.firstName.length > config.validation.user.name.max_length || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(client.firstName))) {
+		if ((!client.firstName || client.firstName.length === 0) || client.firstName.length > validationConf.user.name.max_length || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(client.firstName))) {
 			throw new InvalidParameterException("Invalid client first name");
 		}
 
-		if ((!client.lastName || client.lastName.length === 0) || client.lastName.length > config.validation.user.name.max_length || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(client.lastName))) {
+		if ((!client.lastName || client.lastName.length === 0) || client.lastName.length > validationConf.user.name.max_length || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(client.lastName))) {
 			throw new InvalidParameterException("Invalid client last name");
 		}
 
-		if ((!client.email || client.email.length === 0) || client.email.length > config.validation.user.email.max_length || !(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(client.email))) {
+		if ((!client.email || client.email.length === 0) || client.email.length > validationConf.user.email.max_length || !(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(client.email))) {
 			throw new InvalidParameterException("Invalid client email");
 		}
 
@@ -636,11 +636,11 @@ export class Scheduler {
 			throw new InvalidParameterException("Invalid client address");
 		}*/
 
-		if (checkAddress && (!client.address || client.address.length === 0 || client.address.length > config.validation.property.address.max_length)) {
+		if (checkAddress && (!client.address || client.address.length === 0 || client.address.length > validationConf.property.address.max_length)) {
 			throw new InvalidParameterException("Invalid client address");
 		}
 
-		if (checkAddress && (client.city.length > config.validation.property.city.max_length || !(/^[a-zA-Z',.\s-]+$/.test(client.city)))) {
+		if (checkAddress && (client.city.length > validationConf.property.city.max_length || !(/^[a-zA-Z',.\s-]+$/.test(client.city)))) {
 			throw new InvalidParameterException("Invalid client city");
 		}
 
@@ -654,17 +654,17 @@ export class Scheduler {
 	}
 
 	public static validateRealtorData(realtor: RealtorData) {
-		if (!realtor.firstName || realtor.firstName.length === 0 || realtor.firstName.length > config.validation.user.name.max_length || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(realtor.firstName))) {
+		if (!realtor.firstName || realtor.firstName.length === 0 || realtor.firstName.length > validationConf.user.name.max_length || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(realtor.firstName))) {
 			throw new InvalidParameterException("Invalid realtor first name");
 		}
 
-		if (!realtor.lastName || realtor.lastName.length === 0 || realtor.lastName.length > config.validation.user.name.max_length || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(realtor.lastName))) {
+		if (!realtor.lastName || realtor.lastName.length === 0 || realtor.lastName.length > validationConf.user.name.max_length || !(/^[a-z\-\.\,\'\~\ ]+$/i.test(realtor.lastName))) {
 			throw new InvalidParameterException("Invalid realtor last name");
 		}
 
 		// Affiliation checking skipped
 
-		if (!realtor.email || realtor.email.length === 0 || realtor.email.length > config.validation.user.email.max_length || !(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(realtor.email))) {
+		if (!realtor.email || realtor.email.length === 0 || realtor.email.length > validationConf.user.email.max_length || !(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(realtor.email))) {
 			throw new InvalidParameterException("Invalid realtor email");
 		}
 
@@ -698,11 +698,11 @@ export class Scheduler {
 			throw new InvalidParameterException("Invalid realtor address");
 		}*/
 
-		if (checkAddress && (!realtor.address || realtor.address.length === 0 || realtor.address.length > config.validation.property.address.max_length)) {
+		if (checkAddress && (!realtor.address || realtor.address.length === 0 || realtor.address.length > validationConf.property.address.max_length)) {
 			throw new InvalidParameterException("Invalid realtor address");
 		}
 
-		if (checkAddress && (realtor.city.length > config.validation.property.city.max_length || !(/^[a-zA-Z',.\s-]{1,25}$/.test(realtor.city)))) {
+		if (checkAddress && (realtor.city.length > validationConf.property.city.max_length || !(/^[a-zA-Z',.\s-]{1,25}$/.test(realtor.city)))) {
 			throw new InvalidParameterException("Invalid realtor city");
 		}
 
