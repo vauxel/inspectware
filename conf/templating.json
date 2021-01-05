@@ -23,9 +23,12 @@
         "AGREEMENT_LINK": "Agreement Document Link",
         "SIGNED_DATE": "Agreement Signed Date",
         "SIGNED_TIME": "Agreement Signed Time",
+        "SIGNED_IP": "Agreement Signed IP Addr.",
+        "SIGNED_SIGNATURE": "Agreement Signed Signature",
         "PAID_DATE": "Invoice Paid Date",
         "PAID_TIME": "Invoice Paid Time",
         "PAID_AMOUNT": "Invoice Paid Amount",
+        "PAID_REFERENCE": "Invoice Paid Reference",
         "REPORT_LINK": "Inspection Report Link"
     },
     "placeholder_grouping": {
@@ -66,9 +69,6 @@
             "CLIENT_NAME",
             "CLIENT_NAME_FIRST",
             "CLIENT_NAME_LAST",
-            "REALTOR_NAME",
-            "REALTOR_NAME_FIRST",
-            "REALTOR_NAME_LAST",
             "INSPECTOR_NAME",
             "PROPERTY_ADDRESS",
             "APPOINTMENT_TIME",
@@ -78,9 +78,6 @@
             "LOGIN_PASSWORD"
         ],
         "scheduled_realtor": [
-            "CLIENT_NAME",
-            "CLIENT_NAME_FIRST",
-            "CLIENT_NAME_LAST",
             "REALTOR_NAME",
             "REALTOR_NAME_FIRST",
             "REALTOR_NAME_LAST",
@@ -111,7 +108,9 @@
             "APPOINTMENT_TIME",
             "APPOINTMENT_DATE",
             "SIGNED_DATE",
-            "SIGNED_TIME"
+            "SIGNED_TIME",
+            "SIGNED_IP",
+            "SIGNED_SIGNATURE"
         ],
         "confirm_payment": [
             "CLIENT_NAME",
@@ -123,7 +122,8 @@
             "APPOINTMENT_DATE",
             "PAID_DATE",
             "PAID_TIME",
-            "PAID_AMOUNT"
+            "PAID_AMOUNT",
+            "PAID_REFERENCE"
         ],
         "report_client": [
             "CLIENT_NAME",

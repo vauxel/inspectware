@@ -1,1 +1,5 @@
-DEFAULT CONFIRM AGREEMENT BODY
+<p>Hello {{CLIENT_NAME}},</p>
+<p>Thank you for signing the inspection agreement for the inspection of the property at {{PROPERTY_ADDRESS}} with {{INSPECTOR_NAME}} on {{APPOINTMENT_DATE}} @ {{APPOINTMENT_TIME}}.</p>
+<p>The agreement was signed at {{SIGNED_TIME}} on {{SIGNED_DATE}} from the IP address {{SIGNED_IP}}</p>
+<p>Signature:</p>
+<p>{{SIGNED_SIGNATURE}}</p>

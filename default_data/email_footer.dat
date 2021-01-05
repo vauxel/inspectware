@@ -1,1 +1,4 @@
-DEFAULT EMAIL FOOTER
+<p>{{COMPANY_NAME}}</p>
+<p>{{COMPANY_WEBSITE}}</p>
+<p>{{COMPANY_EMAIL}}</p>
+<p>{{COMPANY_PHONE}}</p>

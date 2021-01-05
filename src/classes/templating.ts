@@ -15,7 +15,8 @@ export interface LoginData {
 
 export interface PaymentData {
 	timestamp: number,
-	amount: number
+	amount: number,
+	reference: string
 }
 
 /**
@@ -195,9 +196,9 @@ export class Templating {
 				if (placeholder === "INSPECTOR_NAME") {
 					replacement = data.inspector.get("first_name") + " " + data.inspector.get("last_name");
 				} else if (placeholder === "INSPECTOR_PHONE") {
-					replacement = data.inspector.get("phone");
+					replacement = `<a href="tel:${data.inspector.get("phone")}">${data.inspector.get("phone")}</a>`;
 				} else if (placeholder === "INSPECTOR_EMAIL") {
-					replacement = data.inspector.get("email");
+					replacement = `<a href="mailto:${data.inspector.get("email")}">${data.inspector.get("email")}</a>`;
 				}
 			}
 
@@ -220,6 +221,14 @@ export class Templating {
 					if (data.inspection.get("agreement").signed) {
 						replacement = moment(data.inspection.get("agreement").timestamp).format("h:mm A");
 					}
+				} else if (placeholder === "SIGNED_IP") {
+					if (data.inspection.get("agreement").signed) {
+						replacement = data.inspection.get("agreement").ip;
+					}
+				} else if (placeholder === "SIGNED_SIGNATURE") {
+					if (data.inspection.get("agreement").signed) {
+						replacement = "<img src='" + data.inspection.get("agreement").signature + "'/>";
+					}
 				}
 			}
 
@@ -233,7 +242,7 @@ export class Templating {
 
 			if (data.login) {
 				if (placeholder === "LOGIN_LINK") {
-					replacement = data.login.link;
+					replacement = `<a href="${data.login.link}">${data.login.link}</a>`;
 				} else if (placeholder === "LOGIN_USERNAME") {
 					replacement = data.login.username;
 				} else if (placeholder === "LOGIN_PASSWORD") {
@@ -248,6 +257,8 @@ export class Templating {
 					replacement = moment(data.payment.timestamp).format("h:mm A");
 				} else if (placeholder === "PAID_AMOUNT") {
 					replacement = data.payment.amount;
+				} else if (placeholder === "PAID_REFERENCE") {
+					replacement = data.payment.reference;
 				}
 			}
 
@@ -257,11 +268,11 @@ export class Templating {
 				} else if (placeholder === "COMPANY_NAME") {
 					replacement = data.account.get("name");
 				} else if (placeholder === "COMPANY_WEBSITE") {
-					replacement = data.account.get("website_url");
+					replacement = `<a href="${data.account.get("website_url")}">${data.account.get("website_url")}</a>`;
 				} else if (placeholder === "COMPANY_PHONE") {
-					replacement = data.account.get("phone");
+					replacement = `<a href="tel:${data.account.get("phone")}">${data.account.get("phone")}</a>`;
 				} else if (placeholder === "COMPANY_EMAIL") {
-					replacement = data.account.get("email");
+					replacement = `<a href="mailto:${data.account.get("email")}">${data.account.get("email")}</a>`;
 				}
 			}
 

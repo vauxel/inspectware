@@ -1,1 +1,15 @@
-DEFAULT SCHEDULED INSPECTION CLIENT BODY
+<p>Hello {{CLIENT_NAME}},</p>
+<p>Thank you for scheduling an inspection with us!</p>
+<p>The details for review are as follows:</p>
+<pre class="ql-syntax" spellcheck="false">
+Address: {{PROPERTY_ADDRESS}}
+Inspector: {{INSPECTOR_NAME}}
+Date: {{APPOINTMENT_DATE}}
+Time: {{APPOINTMENT_TIME}}
+</pre>
+<p>The following login credentials have been generated for you:</p>
+<pre class="ql-syntax" spellcheck="false">
+Username: {{LOGIN_USERNAME}}
+Password: {{LOGIN_PASSWORD}}
+</pre>
+<p>You may login at {{LOGIN_LINK}}</p>

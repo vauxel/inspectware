@@ -1,1 +1,4 @@
-DEFAULT REPORT READY REALTOR BODY
+<p>Hello {{REALTOR_NAME}},</p>
+<p>The report for the inspection performed at {{PROPERTY_ADDRESS}} is now ready.</p>
+<p>You may visit the following link to view it:</p>
+<p>{{REPORT_LINK}}</p>

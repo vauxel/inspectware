@@ -1,1 +1,3 @@
-DEFAULT NOTIFY AGREEMENT BODY
+<p>Hello {{CLIENT_NAME}},</p>
+<p>Before your inspection at {{PROPERTY_ADDRESS}} with {{INSPECTOR_NAME}} on {{APPOINTMENT_DATE}} @ {{APPOINTMENT_TIME}} can be performed, you need to sign the inspection agreement document.</p>
+<p>Link to inspection agreement: {{AGREEMENT_LINK}}</p>

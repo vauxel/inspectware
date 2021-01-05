@@ -1,1 +1,3 @@
-DEFAULT CONFIRM PAYMENT BODY
+<p>Hello {{CLIENT_NAME}},</p>
+<p>Thank you for your payment of {{PAID_AMOUNT}} on {{PAID_DATE}} @ {{PAID_TIME}} for the inspection at {{PROPERTY_ADDRESS}}.</p>
+<p>Transaction reference: {{PAID_REFERENCE}}</p>
