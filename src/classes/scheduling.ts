@@ -2,6 +2,8 @@ import { InvalidParameterException, InvalidOperationException } from "@classes/e
 import { Document } from "mongoose";
 import moment from "moment";
 import { Inspector } from "@classes/inspector";
+import { Mailing } from "@classes/mailing";
+import { LinkHelper } from "@classes/linkhelper";
 import Auth from "@classes/auth";
 import InspectionModel from "@models/inspection";
 import ClientModel from "@models/client";
@@ -348,14 +350,16 @@ export class Scheduler {
 
 		let createdClient1 = false;
 		let client1Document: Document | null = null;
+		let client1Password = "your current password";
 		if (includeClient1Data) {
 			client1Document = await ClientModel.findOne({ email: client1.email });
 
 			if (!client1Document) {
 				createdClient1 = true;
+				client1Password = Auth.generatePassword(8);
 				client1Document = new ClientModel({
 					email: client1.email,
-					password: Auth.generatePassword(8),
+					password: client1Password,
 					phone: client1.phone.replace(/\D/g, ""),
 					first_name: client1.firstName,
 					last_name: client1.lastName,
@@ -381,14 +385,16 @@ export class Scheduler {
 
 		let createdClient2 = false;
 		let client2Document: Document | null = null;
+		let client2Password = "your current password";
 		if (includeClient2Data) {
 			client2Document = await ClientModel.findOne({ email: client2.email });
 
 			if (!client2Document) {
 				createdClient2 = true;
+				client2Password = Auth.generatePassword(8);
 				client2Document = new ClientModel({
 					email: client2.email,
-					password: Auth.generatePassword(8),
+					password: client2Password,
 					phone: client2.phone.replace(/\D/g, ""),
 					first_name: client2.firstName,
 					last_name: client2.lastName,
@@ -399,27 +405,21 @@ export class Scheduler {
 						zip: client2.zip
 					}
 				});
-			} else {
-				client2Document.set("first_name", client2.firstName);
-				client2Document.set("last_name", client2.lastName);
-				client2Document.set("phone", client2.phone.replace(/\D/g, ""));
-				client2Document.set("address.street", client2.address);
-				client2Document.set("address.city", client2.city);
-				client2Document.set("address.state", client2.state);
-				client2Document.set("address.zip", client2.zip);
-			}
 
-			await client2Document.save();
+				await client2Document.save();
+			}
 		}
 
 		let createdRealtor = false;
 		let realtorDocument: Document | null = await RealtorModel.findOne({ email: realtor.email });
+		let realtorPassword = "your current password";
 		if (includeRealtorData) {
 			if (!realtorDocument) {
 				createdRealtor = true;
+				realtorPassword = Auth.generatePassword(8);
 				realtorDocument = new RealtorModel({
 					email: realtor.email,
-					password: Auth.generatePassword(8),
+					password: realtorPassword,
 					phone_primary: {
 						phone_type: realtor.primaryPhoneType,
 						number: realtor.primaryPhone.replace(/\D/g, "")
@@ -438,21 +438,9 @@ export class Scheduler {
 						zip: realtor.zip
 					}
 				});
-			} else {
-				realtorDocument.set("phone_primary.phone_type", realtor.primaryPhoneType);
-				realtorDocument.set("phone_primary.number", realtor.primaryPhone.replace(/\D/g, ""));
-				realtorDocument.set("phone_secondary.phone_type", realtor.secondaryPhoneType);
-				realtorDocument.set("phone_secondary.number", realtor.secondaryPhone.replace(/\D/g, ""));
-				realtorDocument.set("first_name", realtor.firstName);
-				realtorDocument.set("last_name", realtor.lastName);
-				realtorDocument.set("affiliation", realtor.affiliation);
-				realtorDocument.set("address.street", realtor.address);
-				realtorDocument.set("address.city", realtor.city);
-				realtorDocument.set("address.state", realtor.state);
-				realtorDocument.set("address.zip", realtor.zip);
+
+				await realtorDocument.save();
 			}
-	
-			await realtorDocument.save();
 		}
 
 		let inspector = await InspectorModel.findOne({ _id: appointment.inspectorId });
@@ -501,25 +489,61 @@ export class Scheduler {
 					$push: { clients: client2Document }
 				});
 			}
+
+			Mailing.sendScheduledRealtorEmail(
+				account,
+				realtorDocument,
+				inspector,
+				inspection,
+				{
+					link: LinkHelper.realtorLoginLink,
+					username: realtorDocument.get("email"),
+					password: realtorPassword
+				}
+			);
 		}
 
 		if (client1Document) {
 			await client1Document.updateOne({
 				$push: { inspections: inspection }
 			});
+
+			Mailing.sendScheduledClientEmail(
+				account,
+				client1Document,
+				inspector,
+				inspection,
+				{
+					link: LinkHelper.clientLoginLink,
+					username: client1Document.get("email"),
+					password: client1Password
+				}
+			);
 		}
 
 		if (client2Document) {
 			await client2Document.updateOne({
 				$push: { inspections: inspection }
 			});
+
+			Mailing.sendScheduledClientEmail(
+				account,
+				client2Document,
+				inspector,
+				inspection,
+				{
+					link: LinkHelper.clientLoginLink,
+					username: client2Document.get("email"),
+					password: client2Password
+				}
+			);
 		}
 
 		await inspector.updateOne({
 			$push: { inspections: inspection }
 		});
 
-		// TODO: Send emails to realtor and clients
+		// TODO: Send emails to inspector
 	}
 
 	public static validateServicesData(account: Document, services: string[]) {

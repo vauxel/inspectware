@@ -302,10 +302,9 @@ export class Templating {
 		return this.populateTemplate(content, data);
 	}
 
-	public static populateScheduledClientTemplate(content: string, client: Document, realtor: Document, inspector: Document, inspection: Document, login: LoginData) {
+	public static populateScheduledClientTemplate(content: string, client: Document, inspector: Document, inspection: Document, login: LoginData) {
 		let data = this.extractPlaceholderData(templatingConf.placeholders.scheduled_client, {
 			client,
-			realtor,
 			inspector,
 			inspection,
 			login
@@ -314,9 +313,8 @@ export class Templating {
 		return this.populateTemplate(content, data);
 	}
 
-	public static populateScheduledRealtorTemplate(content: string, client: Document, realtor: Document, inspector: Document, inspection: Document, login: LoginData) {
+	public static populateScheduledRealtorTemplate(content: string, realtor: Document, inspector: Document, inspection: Document, login: LoginData) {
 		let data = this.extractPlaceholderData(templatingConf.placeholders.scheduled_realtor, {
-			client,
 			realtor,
 			inspector,
 			inspection,

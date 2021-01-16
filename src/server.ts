@@ -14,10 +14,10 @@ if (!process.argv.includes("-staticsecret")) {
 	console.log("! Auth using static, debugging secret !");
 }
 
-import { Email } from "./classes/email";
+import { Mailing } from "./classes/mailing";
 
-Email.instantiateTransporter();
-Email.loadGenericTemplate();
+Mailing.instantiateTransporter();
+Mailing.loadGenericTemplate();
 
 import { Templating } from "./classes/templating";
 

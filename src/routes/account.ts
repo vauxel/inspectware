@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { Account } from "@classes/account";
 import { Templating } from "@classes/templating";
-import { Email } from "@classes/email";
+import { Mailing } from "@classes/mailing";
 import { restrictAuthorization, restrictNonOwnerInspector } from "@routes/restrictions";
 import Util from "@classes/util";
 

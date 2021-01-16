@@ -275,7 +275,9 @@ export default class Auth {
 		}
 
 		const newAccount = new Account({
-			name: companyName
+			name: companyName,
+			phone: phoneNumber.replace(/\D/g, ""),
+			email: emailAddress
 		});
 		
 		const newInspector = new Inspector({

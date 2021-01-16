@@ -1,3 +1,4 @@
+import RuntimeException from "@classes/exception";
 import { InvalidParameterException, UnauthorizedException } from "@classes/exceptions";
 import { Document } from "mongoose";
 import moment from "moment";
