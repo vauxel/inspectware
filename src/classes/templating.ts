@@ -302,23 +302,21 @@ export class Templating {
 		return this.populateTemplate(content, data);
 	}
 
-	public static populateScheduledClientTemplate(content: string, client: Document, inspector: Document, inspection: Document, login: LoginData) {
+	public static populateScheduledClientTemplate(content: string, client: Document, inspector: Document, inspection: Document) {
 		let data = this.extractPlaceholderData(templatingConf.placeholders.scheduled_client, {
 			client,
 			inspector,
-			inspection,
-			login
+			inspection
 		});
 
 		return this.populateTemplate(content, data);
 	}
 
-	public static populateScheduledRealtorTemplate(content: string, realtor: Document, inspector: Document, inspection: Document, login: LoginData) {
+	public static populateScheduledRealtorTemplate(content: string, realtor: Document, inspector: Document, inspection: Document) {
 		let data = this.extractPlaceholderData(templatingConf.placeholders.scheduled_realtor, {
 			realtor,
 			inspector,
-			inspection,
-			login
+			inspection
 		});
 
 		return this.populateTemplate(content, data);

@@ -7,9 +7,4 @@ Inspector: {{INSPECTOR_NAME}}
 Date: {{APPOINTMENT_DATE}}
 Time: {{APPOINTMENT_TIME}}
 </pre>
-<p>The following login credentials have been generated for you:</p>
-<pre class="ql-syntax" spellcheck="false">
-Username: {{LOGIN_USERNAME}}
-Password: {{LOGIN_PASSWORD}}
-</pre>
-<p>You may login at {{LOGIN_LINK}}</p>
+<p>If you don't already have an account with us, you should also receive an email containing login details.</p>

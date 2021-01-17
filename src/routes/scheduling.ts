@@ -78,4 +78,32 @@ SchedulingRouter.post("/schedule", async (req: Request, res: Response) => {
 	}
 });
 
+SchedulingRouter.get("/exists_client", async (req: Request, res: Response) => {
+	try {
+		const account = await Util.resolveAccount(<string>req.query.account);
+		const data = await Scheduler.getClientExists(<string>req.query.email);
+
+		res.json({
+			status: 200,
+			data
+		});
+	} catch (e) {
+		Util.handleError(e, res);
+	}
+});
+
+SchedulingRouter.get("/exists_realtor", async (req: Request, res: Response) => {
+	try {
+		const account = await Util.resolveAccount(<string>req.query.account);
+		const data = await Scheduler.getRealtorExists(<string>req.query.email);
+
+		res.json({
+			status: 200,
+			data
+		});
+	} catch (e) {
+		Util.handleError(e, res);
+	}
+});
+
 export default SchedulingRouter;

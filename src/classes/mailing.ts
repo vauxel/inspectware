@@ -6,6 +6,7 @@ import Nodemailer from "nodemailer";
 import Juice from "juice";
 import Mustache from "mustache";
 import { Templating, LoginData, PaymentData } from "@classes/templating";
+import { LinkHelper } from "@classes/linkhelper";
 import InspectionModel from "@models/inspection";
 import ClientModel from "@models/client";
 import RealtorModel from "@models/realtor";
@@ -23,6 +24,12 @@ export class Mailing {
 
 	/** Generic template for composing emails */
 	private static genericTemplate: string;
+
+	/** The sender name */
+	private static senderName: string = generalConf.name;
+
+	/** The sender address */
+	private static senderAddr: string = generalConf.email.auth.user;
 
 	/**
 	 * Instantiates the Nodemailer transporter
@@ -79,6 +86,12 @@ export class Mailing {
 		return info.messageId;
 	}
 
+	/**
+	 * Composes the HTML email template with the provided content and inlines its CSS styling
+	 * @param header the header content
+	 * @param body the body content
+	 * @param footer the footer content
+	 */
 	private static compose(header: string, body: string, footer: string) {
 		let rendered = Mustache.render(this.genericTemplate, {
 			header: header,
@@ -89,6 +102,35 @@ export class Mailing {
 		return inlined;
 	}
 
+	/**
+	 * Sends a system email
+	 * @param body the body content
+	 * @param subject the subject text
+	 * @param toName the recipient name
+	 * @param toAddr the recipient email address
+	 */
+	private static async sendSystemEmail(body: string, subject: string, toName: string, toAddr: string) {
+		let composed = this.compose("", body, "");
+
+		await this.send(
+			this.senderName,
+			this.senderAddr,
+			toName,
+			toAddr,
+			subject,
+			composed
+		);
+	}
+
+	/**
+	 * Sends a user-templated email
+	 * @param account the account document
+	 * @param inspector the inspector document
+	 * @param body the body content
+	 * @param subject the subject text
+	 * @param toName the recipient name
+	 * @param toAddr the recipient email address
+	 */
 	private static async sendTemplatedAccountEmail(account: Document, inspector: Document, body: string, subject: string, toName: string, toAddr: string) {
 		let header = Templating.populateHeaderTemplate(
 			account.get("email_templates").header,
@@ -113,13 +155,12 @@ export class Mailing {
 		);
 	}
 
-	public static async sendScheduledClientEmail(account: Document, client: Document, inspector: Document, inspection: Document, login: LoginData) {
+	public static async sendScheduledClientEmail(account: Document, client: Document, inspector: Document, inspection: Document) {
 		let body = Templating.populateScheduledClientTemplate(
 			account.get("email_templates").scheduled_client.body,
 			client,
 			inspector,
-			inspection,
-			login
+			inspection
 		);
 
 		await this.sendTemplatedAccountEmail(
@@ -132,13 +173,12 @@ export class Mailing {
 		);
 	}
 
-	public static async sendScheduledRealtorEmail(account: Document, realtor: Document, inspector: Document, inspection: Document, login: LoginData) {
+	public static async sendScheduledRealtorEmail(account: Document, realtor: Document, inspector: Document, inspection: Document) {
 		let body = Templating.populateScheduledRealtorTemplate(
 			account.get("email_templates").scheduled_realtor.body,
 			realtor,
 			inspector,
-			inspection,
-			login
+			inspection
 		);
 
 		await this.sendTemplatedAccountEmail(
@@ -243,5 +283,33 @@ export class Mailing {
 			realtor.get("first_name") + " " + realtor.get("last_name"),
 			realtor.get("email")
 		);
+	}
+
+	public static async sendNewClientEmail(client: Document, login: LoginData) {
+		let name = client.get("first_name") + " " + client.get("last_name");
+
+		let body = `
+		<p>Hello ${name},</p>
+		<p>A new client account at ${generalConf.name} has been created for you.</p>
+		<p>You may login with the following credentials:</p>
+		<pre>Username: ${login.username}\nPassword: ${login.password}</pre>
+		<p>Login link: ${login.link}</p>
+		`;
+
+		await this.sendSystemEmail(body, "Client Account Details", name, client.get("email"));
+	}
+
+	public static async sendNewRealtorEmail(realtor: Document, login: LoginData) {
+		let name = realtor.get("first_name") + " " + realtor.get("last_name");
+
+		let body = `
+		<p>Hello ${name},</p>
+		<p>A new realtor account at ${generalConf.name} has been created for you.</p>
+		<p>You may login with the following credentials:</p>
+		<pre>Username: ${login.username}\nPassword: ${login.password}</pre>
+		<p>Login link: ${login.link}</p>
+		`;
+
+		await this.sendSystemEmail(body, "Realtor Account Details", name, realtor.get("email"));
 	}
 };

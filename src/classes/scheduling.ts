@@ -330,36 +330,29 @@ export class Scheduler {
 		let includeClient2Data = !!client2.email;
 		let includeRealtorData = !!realtor.email;
 
-		if (includeClient1Data) {
-			this.validateClientData(client1);
-		}
-
-		if (includeClient2Data) {
-			this.validateClientData(client2);
-		}
-
-		if (includeRealtorData) {
-			this.validateRealtorData(realtor);
-		}
-
 		if (!includeClient1Data && !includeRealtorData) {
 			throw new InvalidParameterException("Must provide either client or realtor data");
 		}
 
 		account.set("inspection_counter", account.get("inspection_counter") + 1);
 
+		if ((includeClient1Data && includeClient2Data) && (client1.email === client2.email)) {
+			throw new InvalidParameterException("The email address of client 1 and client 2 cannot be the same");
+		}
+
 		let createdClient1 = false;
 		let client1Document: Document | null = null;
-		let client1Password = "your current password";
 		if (includeClient1Data) {
 			client1Document = await ClientModel.findOne({ email: client1.email });
 
 			if (!client1Document) {
+				this.validateClientData(client1);
+
 				createdClient1 = true;
-				client1Password = Auth.generatePassword(8);
+				let client1Password = Auth.generatePassword(6);
 				client1Document = new ClientModel({
 					email: client1.email,
-					password: client1Password,
+					password: client1Password.hashed,
 					phone: client1.phone.replace(/\D/g, ""),
 					first_name: client1.firstName,
 					last_name: client1.lastName,
@@ -370,31 +363,30 @@ export class Scheduler {
 						zip: client1.zip
 					}
 				});
-			} else {
-				client1Document.set("first_name", client1.firstName);
-				client1Document.set("last_name", client1.lastName);
-				client1Document.set("phone", client1.phone.replace(/\D/g, ""));
-				client1Document.set("address.street", client1.address);
-				client1Document.set("address.city", client1.city);
-				client1Document.set("address.state", client1.state);
-				client1Document.set("address.zip", client1.zip);
-			}
 
-			await client1Document.save();
+				await client1Document.save();
+
+				await Mailing.sendNewClientEmail(client1Document, {
+					username: client1.email,
+					password: client1Password.raw,
+					link: LinkHelper.clientLoginLink
+				});
+			}
 		}
 
 		let createdClient2 = false;
 		let client2Document: Document | null = null;
-		let client2Password = "your current password";
 		if (includeClient2Data) {
 			client2Document = await ClientModel.findOne({ email: client2.email });
 
 			if (!client2Document) {
+				this.validateClientData(client2);
+
 				createdClient2 = true;
-				client2Password = Auth.generatePassword(8);
+				let client2Password = Auth.generatePassword(6);
 				client2Document = new ClientModel({
 					email: client2.email,
-					password: client2Password,
+					password: client2Password.hashed,
 					phone: client2.phone.replace(/\D/g, ""),
 					first_name: client2.firstName,
 					last_name: client2.lastName,
@@ -407,19 +399,26 @@ export class Scheduler {
 				});
 
 				await client2Document.save();
+
+				await Mailing.sendNewClientEmail(client2Document, {
+					username: client2.email,
+					password: client2Password.raw,
+					link: LinkHelper.clientLoginLink
+				});
 			}
 		}
 
 		let createdRealtor = false;
 		let realtorDocument: Document | null = await RealtorModel.findOne({ email: realtor.email });
-		let realtorPassword = "your current password";
 		if (includeRealtorData) {
 			if (!realtorDocument) {
+				this.validateRealtorData(realtor);
+
 				createdRealtor = true;
-				realtorPassword = Auth.generatePassword(8);
+				let realtorPassword = Auth.generatePassword(6);
 				realtorDocument = new RealtorModel({
 					email: realtor.email,
-					password: realtorPassword,
+					password: realtorPassword.hashed,
 					phone_primary: {
 						phone_type: realtor.primaryPhoneType,
 						number: realtor.primaryPhone.replace(/\D/g, "")
@@ -440,6 +439,12 @@ export class Scheduler {
 				});
 
 				await realtorDocument.save();
+
+				await Mailing.sendNewRealtorEmail(realtorDocument, {
+					username: realtor.email,
+					password: realtorPassword.raw,
+					link: LinkHelper.realtorLoginLink
+				});
 			}
 		}
 
@@ -494,12 +499,7 @@ export class Scheduler {
 				account,
 				realtorDocument,
 				inspector,
-				inspection,
-				{
-					link: LinkHelper.realtorLoginLink,
-					username: realtorDocument.get("email"),
-					password: realtorPassword
-				}
+				inspection
 			);
 		}
 
@@ -512,12 +512,7 @@ export class Scheduler {
 				account,
 				client1Document,
 				inspector,
-				inspection,
-				{
-					link: LinkHelper.clientLoginLink,
-					username: client1Document.get("email"),
-					password: client1Password
-				}
+				inspection
 			);
 		}
 
@@ -530,12 +525,7 @@ export class Scheduler {
 				account,
 				client2Document,
 				inspector,
-				inspection,
-				{
-					link: LinkHelper.clientLoginLink,
-					username: client2Document.get("email"),
-					password: client2Password
-				}
+				inspection
 			);
 		}
 
@@ -737,5 +727,47 @@ export class Scheduler {
 		if (checkAddress && !(/^\d{5}$/.test("" + realtor.zip))) {
 			throw new InvalidParameterException("Invalid realtor zip");
 		}
+	}
+
+	/**
+	 * Checks if a client with the specified email exists
+	 * @param email the email of the client
+	 * @returns the existence and name of the client (if found)
+	 */
+	public static async getClientExists(email: string) {
+		let client = await ClientModel.findOne({ email: email });
+
+		if (!client) {
+			return {
+				exists: false
+			};
+		}
+
+		return {
+			exists: true,
+			first_name: client.get("first_name"),
+			last_name: client.get("last_name")
+		};
+	}
+
+	/**
+	 * Checks if a realtor with the specified email exists
+	 * @param email the email of the realtor
+	 * @returns the existence and name of the realtor (if found)
+	 */
+	public static async getRealtorExists(email: string) {
+		let realtor = await RealtorModel.findOne({ email: email });
+
+		if (!realtor) {
+			return {
+				exists: false
+			};
+		}
+
+		return {
+			exists: true,
+			first_name: realtor.get("first_name"),
+			last_name: realtor.get("last_name")
+		};
 	}
 }

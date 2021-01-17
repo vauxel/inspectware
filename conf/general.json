@@ -1,4 +1,5 @@
 {
+    "name": "inspectware",
     "public_base_url": "localhost:8080/dash",
     "static_dir": "static",
     "defaultdata_dir": "default_data",
@@ -15,8 +16,8 @@
         "host": "smtp.ethereal.email",
         "port": 587,
         "auth": {
-            "user": "vernie.schmidt7@ethereal.email",
-            "pass": "FGqe19AZ8cukpzNzAW"
+            "user": "corbin.lehner62@ethereal.email",
+            "pass": "bmNR5af2uuFzgBVvyG"
         }
     }
 }

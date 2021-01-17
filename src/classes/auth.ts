@@ -108,8 +108,13 @@ export default class Auth {
 	 * Generates a password of the specified length
 	 * @param length the password length
 	 */
-	public static generatePassword(length: number): string {
-		return this.hashPassword(randomBytes(length).toString("hex"));
+	public static generatePassword(length: number): {raw: string, hashed: string} {
+		let raw = randomBytes(length).toString("hex");
+		let hashed = this.hashPassword(raw);
+		return {
+			raw,
+			hashed
+		};
 	}
 
 	/**

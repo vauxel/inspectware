@@ -12,9 +12,6 @@
         "PROPERTY_ADDRESS": "Property Address",
         "APPOINTMENT_TIME": "Appointment Time",
         "APPOINTMENT_DATE": "Appointment Date",
-        "LOGIN_LINK": "Login Link",
-        "LOGIN_USERNAME": "Login Username",
-        "LOGIN_PASSWORD": "Login Password",
         "COMPANY_LOGO": "Company Logo",
         "COMPANY_NAME": "Company Name",
         "COMPANY_WEBSITE": "Company Website Link",
@@ -72,10 +69,7 @@
             "INSPECTOR_NAME",
             "PROPERTY_ADDRESS",
             "APPOINTMENT_TIME",
-            "APPOINTMENT_DATE",
-            "LOGIN_LINK",
-            "LOGIN_USERNAME",
-            "LOGIN_PASSWORD"
+            "APPOINTMENT_DATE"
         ],
         "scheduled_realtor": [
             "REALTOR_NAME",
@@ -84,10 +78,7 @@
             "INSPECTOR_NAME",
             "PROPERTY_ADDRESS",
             "APPOINTMENT_TIME",
-            "APPOINTMENT_DATE",
-            "LOGIN_LINK",
-            "LOGIN_USERNAME",
-            "LOGIN_PASSWORD"
+            "APPOINTMENT_DATE"
         ],
         "notify_agreement": [
             "CLIENT_NAME",
