@@ -62,14 +62,29 @@ export class Inspection {
 				foundation: inspection.get("property").foundation
 			},
 			services: parsedServices,
+			inspector: {
+				id: inspection.get("inspector").id,
+				name: `${inspection.get("inspector.first_name")} ${inspection.get("inspector.last_name")}`,
+				phone: inspection.get("inspector.phone"),
+				email: inspection.get("inspector.email")
+			},
 			client1: (inspection.get("client1") ? {
-				name: `${inspection.get("client1.first_name")} ${inspection.get("client1.last_name")}`
+				id: inspection.get("client1").id,
+				name: `${inspection.get("client1.first_name")} ${inspection.get("client1.last_name")}`,
+				phone: inspection.get("client1.phone"),
+				email: inspection.get("client1.email")
 			} : null),
 			client2: (inspection.get("client2") ? {
-				name: `${inspection.get("client2.first_name")} ${inspection.get("client2.last_name")}`
+				id: inspection.get("client2").id,
+				name: `${inspection.get("client2.first_name")} ${inspection.get("client2.last_name")}`,
+				phone: inspection.get("client2.phone"),
+				email: inspection.get("client2.email")
 			} : null),
 			realtor: (inspection.get("realtor") ? {
-				name: `${inspection.get("realtor.first_name")} ${inspection.get("realtor.last_name")}`
+				id: inspection.get("realtor").id,
+				name: `${inspection.get("realtor.first_name")} ${inspection.get("realtor.last_name")}`,
+				phone: inspection.get("realtor.phone"),
+				email: inspection.get("realtor.email")
 			} : null),
 			date: inspection.get("date"),
 			time: inspection.get("time"),
