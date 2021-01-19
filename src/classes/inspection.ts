@@ -156,6 +156,21 @@ export class Inspection {
 	}
 
 	/**
+	 * Updates the appointment date and time for an inspection
+	 * @param inspection the inspection document
+	 * @param date the new date
+	 * @param time the new time
+	 * @returns whether the add operation was successful
+	 */
+	public static async updateAppointment(inspection: Document, date: string, time: number) {
+		Scheduler.validateDatetimeData(date, time);
+		inspection.set("date", date);
+		inspection.set("time", time);
+		await inspection.save();
+		return true;
+	}
+
+	/**
 	 * Gets pricing & payment information for an inspection
 	 * @param inspection the inspection document
 	 */

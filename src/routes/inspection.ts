@@ -73,6 +73,22 @@ InspectionRouter.post("/property_info", restrictAuthorization, restrictNonInspec
 	}
 });
 
+InspectionRouter.post("/appointment", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
+	try {
+		const inspector = await Util.resolveInspector(res.locals.auth.id);
+		const inspection = await Util.resolveInspection(req.body.id);
+		const success = await Inspection.updateAppointment(
+			inspection,
+			req.body.date,
+			req.body.time
+		);
+		
+		res.status(200).json({ status: 200 });
+	} catch (e) {
+		Util.handleError(e, res);
+	}
+});
+
 InspectionRouter.post("/gen_invoice", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
 	try {
 		const inspector = await Util.resolveInspector(res.locals.auth.id);

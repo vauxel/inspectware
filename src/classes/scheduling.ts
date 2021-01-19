@@ -599,23 +599,27 @@ export class Scheduler {
 		}
 	}
 
-	public static async validateAppointmentData(account: Document, appointment: AppointmentData) {
-		let date = moment(appointment.date, "YYYYMMDD", true);
+	public static validateDatetimeData(date: string, time: number) {
+		let dateMoment = moment(date, "YYYYMMDD", true);
 
-		if (!date.isValid()) {
+		if (!dateMoment.isValid()) {
 			throw new InvalidParameterException("Invalid appointment date");
 		}
 
-		if (appointment.time < 0 || appointment.time >= 1440 || Math.floor(appointment.time) != appointment.time) {
+		if (time < 0 || time >= 1440 || Math.floor(time) != time) {
 			throw new InvalidParameterException("Invalid appointment time");
 		} else {
-			let hour = Math.floor(appointment.time / 60);
-			let minute = appointment.time % 60;
+			let hour = Math.floor(time / 60);
+			let minute = time % 60;
 
 			if (hour < 0 || hour >= 24 || minute < 0 || minute >= 60) {
 				throw new InvalidParameterException("Invalid appointment time");
 			}
 		}
+	}
+
+	public static async validateAppointmentData(account: Document, appointment: AppointmentData) {
+		this.validateDatetimeData(appointment.date, appointment.time);
 
 		let inspectors: string[] = account.get("inspectors");
 		if (!inspectors.includes(appointment.inspectorId)) {
