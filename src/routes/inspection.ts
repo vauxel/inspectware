@@ -104,4 +104,16 @@ InspectionRouter.post("/gen_invoice", restrictAuthorization, restrictNonInspecto
 	}
 });
 
+InspectionRouter.post("/confirm_details", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
+	try {
+		const inspector = await Util.resolveInspector(res.locals.auth.id);
+		const inspection = await Util.resolveInspection(req.body.id);
+		const success = await Inspection.confirmDetails(inspection);
+		
+		res.status(200).json({ status: 200 });
+	} catch (e) {
+		Util.handleError(e, res);
+	}
+});
+
 export default InspectionRouter;

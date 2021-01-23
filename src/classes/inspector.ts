@@ -50,6 +50,7 @@ export class Inspector {
 					timestamp: inspection.agreement.signed ? inspection.agreement.timestamp : undefined
 				},
 				payment: {
+					invoice_sent: inspection.payment.invoice_sent,
 					balance: inspection.payment.balance,
 					timestamp: inspection.payment.balance == 0 ? inspection.payment.timestamp : undefined
 				},

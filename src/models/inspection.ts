@@ -44,7 +44,7 @@ const InspectionSchema = new Mongoose.Schema({
 		type: String,
 		ref: "Inspector"
 	},
-	details_locked: {
+	details_confirmed: {
 		type: Boolean,
 		default: false
 	},

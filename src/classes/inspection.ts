@@ -89,7 +89,7 @@ export class Inspection {
 			date: inspection.get("date"),
 			time: inspection.get("time"),
 			scheduled: inspection.get("scheduled"),
-			details_locked: inspection.get("details_locked")
+			details_confirmed: inspection.get("details_confirmed")
 		};
 	}
 
@@ -107,6 +107,10 @@ export class Inspection {
 	 * @returns whether the add operation was successful
 	 */
 	public static async updatePropertyDetails(inspection: Document, address1: string, address2: string, city: string, state: string, zip: number, sqft: number, year_built: number, foundation: string) {
+		if (inspection.get("details_confirmed") === true) {
+			throw new InvalidOperationException("The inspection details are confirmed");
+		}
+
 		Scheduler.validatePropertyData({
 			address1: !!address1 ? address1 : inspection.get("property").address1,
 			address2,
@@ -163,6 +167,10 @@ export class Inspection {
 	 * @returns whether the add operation was successful
 	 */
 	public static async updateAppointment(inspection: Document, date: string, time: number) {
+		if (inspection.get("details_confirmed") === true) {
+			throw new InvalidOperationException("The inspection details are confirmed");
+		}
+
 		Scheduler.validateDatetimeData(date, time);
 		inspection.set("date", date);
 		inspection.set("time", time);
@@ -205,6 +213,20 @@ export class Inspection {
 	}
 
 	/**
+	 * Confirms the inspection details
+	 * @param inspection the inspection document
+	 */
+	public static async confirmDetails(inspection: Document) {
+		if (inspection.get("details_confirmed") === true) {
+			throw new InvalidOperationException("The inspection details are already confirmed");
+		}
+
+		inspection.set("details_confirmed", true);
+		await inspection.save();
+		return true;
+	}
+
+	/**
 	 * Generates and sends a payment invoice to the client(s)
 	 * @param inspection the inspection document
 	 */
@@ -231,7 +253,6 @@ export class Inspection {
 			inspection.get("property").foundation
 		);
 
-		inspection.set("details_locked", true);
 		inspection.set("payment.invoice_sent", true);
 		inspection.set("payment.doc", idocument.id);
 		inspection.set("payment.invoiced", pricing.total);
