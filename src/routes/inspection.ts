@@ -116,4 +116,20 @@ InspectionRouter.post("/confirm_details", restrictAuthorization, restrictNonInsp
 	}
 });
 
+InspectionRouter.post("/services", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
+	try {
+		const inspector = await Util.resolveInspector(res.locals.auth.id);
+		const inspection = await Util.resolveInspection(req.body.id);
+		const success = await Inspection.updateServices(
+			inspection,
+			req.body.main,
+			req.body.additional
+		);
+		
+		res.status(200).json({ status: 200 });
+	} catch (e) {
+		Util.handleError(e, res);
+	}
+});
+
 export default InspectionRouter;

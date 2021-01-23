@@ -31,22 +31,10 @@ export class Inspection {
 	 */
 	public static async getInfo(inspection: Document) {
 		await inspection.populate("client1 client2 realtor inspector").execPopulate();
-
-		let parsedServices: string[] = [];
 		let account = await AccountModel.findById(inspection.get("account"));
 
 		if (account === null) {
 			throw new RuntimeException("Inspection document is malformed");
-		}
-
-		for (let serviceName of inspection.get("services")) {
-			if (serviceName == "full") {
-				parsedServices.push("Full Home Inspection");
-			} else if (serviceName == "pre") {
-				parsedServices.push("Pre-Drywall Inspection");
-			} else {
-				parsedServices.push(account.get("services").find((service: {short_name: string}) => service.short_name === serviceName));
-			}
 		}
 
 		return {
@@ -61,7 +49,7 @@ export class Inspection {
 				year_built: inspection.get("property").year_built,
 				foundation: inspection.get("property").foundation
 			},
-			services: parsedServices,
+			services: inspection.get("services"),
 			inspector: {
 				id: inspection.get("inspector").id,
 				name: `${inspection.get("inspector.first_name")} ${inspection.get("inspector.last_name")}`,
@@ -108,7 +96,7 @@ export class Inspection {
 	 */
 	public static async updatePropertyDetails(inspection: Document, address1: string, address2: string, city: string, state: string, zip: number, sqft: number, year_built: number, foundation: string) {
 		if (inspection.get("details_confirmed") === true) {
-			throw new InvalidOperationException("The inspection details are confirmed");
+			throw new InvalidOperationException("The inspection details are already confirmed");
 		}
 
 		Scheduler.validatePropertyData({
@@ -168,12 +156,38 @@ export class Inspection {
 	 */
 	public static async updateAppointment(inspection: Document, date: string, time: number) {
 		if (inspection.get("details_confirmed") === true) {
-			throw new InvalidOperationException("The inspection details are confirmed");
+			throw new InvalidOperationException("The inspection details are already confirmed");
 		}
 
 		Scheduler.validateDatetimeData(date, time);
 		inspection.set("date", date);
 		inspection.set("time", time);
+		await inspection.save();
+		return true;
+	}
+
+	/**
+	 * Updates the services for an inspection
+	 * @param inspection the inspection document
+	 * @param main the new main service
+	 * @param additional the new list of additional services
+	 */
+	public static async updateServices(inspection: Document, main: string, additional: string[]) {
+		console.log(additional);
+		if (inspection.get("details_confirmed") === true) {
+			throw new InvalidOperationException("The inspection details are already confirmed");
+		}
+
+		let account = await AccountModel.findById(inspection.get("account"));
+
+		if (account === null) {
+			throw new RuntimeException("Inspection document is malformed");
+		}
+
+		Scheduler.validateServicesData(account, [...additional, main]);
+
+		inspection.set("services.main", main);
+		inspection.set("services.additional", additional);
 		await inspection.save();
 		return true;
 	}
@@ -191,7 +205,7 @@ export class Inspection {
 
 		let pricing = !inspection.get("payment").invoice_sent ? Scheduler.calculatePricing(
 			account,
-			inspection.get("services"),
+			[...inspection.get("services").additional, inspection.get("services").main],
 			inspection.get("property").sqft,
 			inspection.get("property").year_built,
 			inspection.get("property").foundation
@@ -247,7 +261,7 @@ export class Inspection {
 
 		let pricing = Scheduler.calculatePricing(
 			account,
-			inspection.get("services"),
+			[...inspection.get("services").additional, inspection.get("services").main],
 			inspection.get("property").sqft,
 			inspection.get("property").year_built,
 			inspection.get("property").foundation

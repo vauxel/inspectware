@@ -27,7 +27,10 @@ const InspectionSchema = new Mongoose.Schema({
 		year_built: Number,
 		foundation: String
 	},
-	services: [String],
+	services: {
+		main: String,
+		additional: [String]
+	},
 	client1: {
 		type: String,
 		ref: "Client"

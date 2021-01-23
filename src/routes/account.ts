@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { Account } from "@classes/account";
 import { Templating } from "@classes/templating";
 import { Mailing } from "@classes/mailing";
-import { restrictAuthorization, restrictNonOwnerInspector } from "@routes/restrictions";
+import { restrictAuthorization, restrictNonInspectors, restrictNonOwnerInspector } from "@routes/restrictions";
 import Util from "@classes/util";
 
 const AccountRouter = Router();
@@ -44,6 +44,21 @@ AccountRouter.get("/template_placeholders", restrictAuthorization, restrictNonOw
 		const inspector = await Util.resolveInspector(res.locals.auth.id);
 		const account = await Util.resolveAccount(inspector.get("account"));
 		const data = Templating.getTemplatePlaceholders(<string>req.query.template);
+
+		res.json({
+			status: 200,
+			data
+		});
+	} catch (e) {
+		Util.handleError(e, res);
+	}
+});
+
+AccountRouter.get("/services", restrictAuthorization, restrictNonInspectors, async (req: Request, res: Response) => {
+	try {
+		const inspector = await Util.resolveInspector(res.locals.auth.id);
+		const account = await Util.resolveAccount(inspector.get("account"));
+		const data = Account.getServices(account);
 
 		res.json({
 			status: 200,

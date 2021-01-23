@@ -10,6 +10,7 @@ import ClientModel from "@models/client";
 import RealtorModel from "@models/realtor";
 import InspectorModel from "@models/inspector";
 import validationConf from "@root/conf/validation.json";
+import RuntimeException from './exception';
 
 /**
  * Interface for scheduler property data
@@ -454,6 +455,19 @@ export class Scheduler {
 			throw new InvalidParameterException("Invalid inspector id");
 		}
 
+		let mainService = "";
+		let mainServiceIndex = -1;
+
+		if ((mainServiceIndex = services.indexOf("full")) !== -1) {
+			mainService = "full";
+			services.splice(mainServiceIndex, 1);
+		} else if ((mainServiceIndex = services.indexOf("pre")) !== -1) {
+			mainService = "pre";
+			services.splice(mainServiceIndex, 1);
+		} else {
+			throw new RuntimeException("Services didn't contain a main service");
+		}
+
 		const inspection = new InspectionModel({
 			inspection_number: account.get("inspection_counter"),
 			account: account.id,
@@ -469,7 +483,10 @@ export class Scheduler {
 				year_built: property.year_built,
 				foundation: property.foundation
 			},
-			services: services,
+			services: {
+				main: mainService,
+				additional: services
+			},
 			client1: client1Document,
 			client2: client2Document,
 			realtor: realtorDocument,

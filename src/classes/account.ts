@@ -101,4 +101,33 @@ export class Account {
 		await account.save();
 		return true;
 	}
+
+	/**
+	 * Gets the services for the account
+	 * @param account the account document
+	 */
+	public static getServices(account: Document): {main: {short: string, long: string}[], additional: {short: string, long: string}[]} {
+		let additional = [];
+
+		for (let service of account.get("services")) {
+			additional.push({
+				short: service.short_name,
+				long: service.long_name
+			});
+		}
+
+		return {
+			main: [
+				{
+					short: "full",
+					long: "Full Home Inspection"
+				},
+				{
+					short: "pre",
+					long: "Pre-Drywall Inspection"
+				}
+			],
+			additional: additional
+		};
+	}
 }
