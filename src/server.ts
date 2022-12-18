@@ -59,9 +59,9 @@ server.use("/api/account", accountRouter);
 server.use("/doc", docRouter);
 
 const dashboard = express();
-dashboard.use(express.static(join(__dirname, "../dashboard/dist")));
+dashboard.use(express.static(join(__dirname, "../dashboard")));
 dashboard.use("*", (req, res) => {
-	res.sendFile(join(__dirname, "../dashboard/dist/index.html"));
+	res.sendFile(join(__dirname, "../dashboard/index.html"));
 });
 
 server.use("/dash", dashboard);

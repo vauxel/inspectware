@@ -5,7 +5,7 @@
 	"main": "src/server.ts",
 	"scripts": {
 		"start": "npm run build && npm run serve:prod",
-		"build": "tsc --project tsconfig.json && tscpaths -p tsconfig.json -s . -o ./dist",
+		"build": "tsc --project tsconfig.json && tscpaths -p tsconfig.json -s . -o ./dist && cp -r dashboard/dist dist/dashboard",
 		"serve:prod": "node dist/src/server.js",
 		"serve:dev": "node dist/src/server.js -staticsecret",
 		"debug": "nodemon -e ts -w ./src -x 'npm run build && npm run serve:dev'"
